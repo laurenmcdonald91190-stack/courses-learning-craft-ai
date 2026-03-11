@@ -261,6 +261,39 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .xp-pop{position:fixed;pointer-events:none;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:700;color:var(--gold);z-index:9999;animation:xpFloat 1.8s ease-out forwards;}
 @keyframes xpFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(1.3);}}
 
+/* ── CONFETTI ── */
+.confetti-piece{position:fixed;pointer-events:none;z-index:9998;width:10px;height:10px;border-radius:2px;animation:confettiFall linear forwards;}
+@keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+
+/* ── DEMO INTRO OVERLAY ── */
+#demo-intro-overlay{position:fixed;inset:0;background:var(--bg);z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;opacity:1;transition:opacity 0.6s ease;}
+#demo-intro-overlay.fade-out{opacity:0;pointer-events:none;}
+.demo-intro-logo{font-size:2rem;font-weight:800;color:var(--text);letter-spacing:-0.02em;}
+.demo-intro-logo span{background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.demo-intro-tagline{font-size:1rem;color:var(--text-muted);text-align:center;max-width:400px;line-height:1.6;}
+.demo-intro-bar{width:280px;height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.demo-intro-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:2px;animation:introLoad 1.8s ease forwards;}
+@keyframes introLoad{0%{width:0%;}100%{width:100%;}}
+.demo-intro-dots{display:flex;gap:0.5rem;align-items:center;}
+.demo-intro-dot{width:6px;height:6px;border-radius:50%;background:var(--border-w);animation:dotPulse 1.2s ease infinite;}
+.demo-intro-dot:nth-child(2){animation-delay:0.2s;}
+.demo-intro-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes dotPulse{0%,100%{background:var(--border-w);transform:scale(1);}50%{background:var(--cyan);transform:scale(1.4);}}
+
+/* ── MILESTONE BANNER ── */
+#milestone-banner{position:fixed;top:1.5rem;left:50%;transform:translateX(-50%) translateY(-80px);z-index:9000;background:linear-gradient(135deg,rgba(0,229,200,0.15),rgba(155,93,229,0.15));border:1px solid rgba(0,229,200,0.4);border-radius:50px;padding:0.7rem 1.8rem;display:flex;align-items:center;gap:0.75rem;font-size:0.9rem;font-weight:600;color:var(--text);transition:transform 0.5s cubic-bezier(0.34,1.56,0.64,1),opacity 0.4s ease;opacity:0;pointer-events:none;backdrop-filter:blur(10px);}
+#milestone-banner.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.milestone-icon{font-size:1.3rem;}
+
+/* ── GAMIFICATION TOOLTIPS ── */
+.gam-tooltip{position:absolute;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0.75rem 1rem;font-size:0.8rem;color:var(--text);z-index:500;max-width:220px;box-shadow:0 8px 32px rgba(0,0,0,0.4);opacity:0;transform:translateY(6px);transition:all 0.25s ease;pointer-events:none;line-height:1.5;}
+.gam-tooltip.visible{opacity:1;transform:translateY(0);}
+.gam-tooltip-title{font-weight:700;color:var(--cyan);margin-bottom:0.3rem;font-size:0.82rem;}
+.gam-tooltip-trigger{position:relative;cursor:help;}
+.gam-tooltip-trigger:hover .gam-tooltip{opacity:1;transform:translateY(0);}
+.tooltip-pulse{animation:tooltipPing 2.5s ease infinite;}
+@keyframes tooltipPing{0%,100%{box-shadow:0 0 0 0 rgba(0,229,200,0.4);}50%{box-shadow:0 0 0 6px rgba(0,229,200,0);}}
+
 /* Streak / level bar in player */
 .player-meta{display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
 .meta-chip{display:flex;align-items:center;gap:0.4rem;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--text-muted);background:var(--bg2);border:1px solid var(--border-w);padding:0.35rem 0.75rem;border-radius:100px;}
@@ -372,6 +405,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </head>
 <body>
 
+<!-- ── DEMO INTRO OVERLAY ── -->
+<div id="demo-intro-overlay" style="display:none;">
+  <div class="demo-intro-logo"><span>Learning Craft AI</span></div>
+  <div class="demo-intro-tagline">See what structured AI contributor training looks like — powered by real gamification and learning design.</div>
+  <div class="demo-intro-bar"><div class="demo-intro-bar-fill"></div></div>
+  <div class="demo-intro-dots">
+    <div class="demo-intro-dot"></div>
+    <div class="demo-intro-dot"></div>
+    <div class="demo-intro-dot"></div>
+  </div>
+</div>
+
+<!-- ── MILESTONE BANNER ── -->
+<div id="milestone-banner">
+  <span class="milestone-icon" id="milestone-icon">🎯</span>
+  <span id="milestone-text">Milestone reached!</span>
+</div>
+
 <!-- ══════════════════════════════
      AUTH VIEW
 ══════════════════════════════ -->
@@ -454,12 +505,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </a>
       </nav>
       <div class="sidebar-bottom">
-        <div class="xp-bar-wrap">
+        <div class="xp-bar-wrap gam-tooltip-trigger">
           <div class="xp-label">
             <span>XP Progress</span>
             <span id="sidebar-xp-label">0 / 500</span>
           </div>
           <div class="xp-bar"><div class="xp-fill" id="sidebar-xp-fill" style="width:0%"></div></div>
+          <div class="gam-tooltip" style="bottom:calc(100% + 8px);left:0;top:auto;"><div class="gam-tooltip-title">XP & Level System</div>Contributors earn XP by completing lessons (+50) and answering quiz questions correctly (+25). Every 500 XP = a new level. Higher levels unlock badges and leaderboard recognition.</div>
         </div>
         <div style="margin-top:1rem;display:flex;gap:0.5rem;">
           <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
@@ -994,15 +1046,18 @@ function handleDemoLogin() {
   appState.isDemo = true;
   appState.isAdmin = false;
   appState.user = { name: 'Demo Guest', email: DEMO_EMAIL, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 };
-  // Inject demo course into courses array for this session
   if (!courses.find(c => c.id === 'course-demo')) courses.push(demoCourse);
-  showView('view-app');
-  renderApp();
-  // Show demo banner
-  setTimeout(() => {
-    const banner = document.getElementById('demo-banner');
-    if (banner) banner.style.display = 'flex';
-  }, 300);
+  // Show intro overlay first, then reveal the app
+  const overlay = document.getElementById('demo-intro-overlay');
+  if (overlay) overlay.style.display = 'flex';
+  showDemoIntro(() => {
+    showView('view-app');
+    renderApp();
+    setTimeout(() => {
+      const banner = document.getElementById('demo-banner');
+      if (banner) banner.style.display = 'flex';
+    }, 300);
+  });
 }
 
 function handleRegister() {
@@ -1355,8 +1410,14 @@ function renderQuizHTML(course, lessonIdx) {
   if (!quizzes || !quizzes.length) return '<p style="color:var(--text-muted)">No questions for this section yet.</p>';
   return `
     <div class="player-meta">
-      <div class="meta-chip"><span>❓</span><span class="chip-val">${quizzes.length}</span><span>questions</span></div>
-      <div class="meta-chip gold"><span>⚡</span><span class="chip-val">+25 XP</span><span>per correct answer</span></div>
+      <div class="meta-chip gam-tooltip-trigger tooltip-pulse">
+        <span>❓</span><span class="chip-val">${quizzes.length}</span><span>questions</span>
+        <div class="gam-tooltip"><div class="gam-tooltip-title">Knowledge Checks</div>Each question tests real understanding — not just recall. Answer correctly to earn XP and build toward badges.</div>
+      </div>
+      <div class="meta-chip gold gam-tooltip-trigger tooltip-pulse">
+        <span>⚡</span><span class="chip-val">+25 XP</span><span>per correct answer</span>
+        <div class="gam-tooltip"><div class="gam-tooltip-title">XP System</div>Contributors earn XP for every lesson and correct answer. XP drives level progression, leaderboard rank, and badge unlocks — keeping engagement high.</div>
+      </div>
     </div>
     ${quizzes.map((q,qi) => `
       <div class="quiz-wrap" id="quiz-${qi}">
@@ -1416,6 +1477,8 @@ function submitAnswer(qi) {
     addXP(25);
     appState.user.correctAnswers = (appState.user.correctAnswers||0) + 1;
     spawnXPPop('+25 XP');
+    spawnConfetti();
+    showMilestoneBanner('✅', 'Correct! +25 XP earned');
     checkBadges();
   }
 }
@@ -1431,6 +1494,15 @@ function completeLesson(idx) {
     if (lesson.type !== 'quiz') {
       addXP(50);
       spawnXPPop('+50 XP');
+      const lessonNum = u.lessonsCompleted.filter(k => k.startsWith(course.id)).length;
+      showMilestoneBanner('⚡', `Lesson complete! +50 XP`);
+      // Progress milestones
+      const videoLessons = course.lessons.filter(l => l.type !== 'quiz').length;
+      const doneLessons = u.lessonsCompleted.filter(k => k.startsWith(course.id)).length;
+      const pct = Math.round((doneLessons / videoLessons) * 100);
+      if (pct >= 50 && pct < 100) {
+        setTimeout(() => { showMilestoneBanner('🔥', 'Halfway there! Keep going'); spawnConfetti(); }, 1200);
+      }
     }
     checkBadges();
   }
@@ -1441,6 +1513,9 @@ function completeLesson(idx) {
   const allDone = course.lessons.every(l => u.lessonsCompleted.includes(course.id+'-'+l.id));
   if (allDone) {
     showToast('success','🎓',`Course complete! Great work.`);
+    spawnConfetti();
+    setTimeout(() => spawnConfetti(), 600);
+    setTimeout(() => showMilestoneBanner('🏆', 'Course complete! Outstanding work'), 400);
     if (!u.badges.includes('course-complete')) {
       u.badges.push('course-complete');
       setTimeout(() => showLevelUp('Course Complete! 🎓','You\'ve finished the full course. Outstanding work.'), 1000);
@@ -1506,6 +1581,51 @@ function spawnXPPop(text) {
   el.style.top = (window.innerHeight/2)+'px';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 1900);
+}
+
+function spawnConfetti() {
+  const colors = ['#00e5c8','#9b5de5','#f5c842','#ff6b9d','#00d4ff','#ffffff'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = (Math.random() * 100) + 'vw';
+      el.style.top = '-20px';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.width = (Math.random() * 8 + 6) + 'px';
+      el.style.height = (Math.random() * 8 + 6) + 'px';
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      el.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+      el.style.animationDelay = (Math.random() * 0.3) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3500);
+    }, i * 18);
+  }
+}
+
+function showMilestoneBanner(icon, text) {
+  const banner = document.getElementById('milestone-banner');
+  const iconEl = document.getElementById('milestone-icon');
+  const textEl = document.getElementById('milestone-text');
+  if (!banner) return;
+  iconEl.textContent = icon;
+  textEl.textContent = text;
+  banner.classList.add('show');
+  setTimeout(() => banner.classList.remove('show'), 3500);
+}
+
+function showDemoIntro(callback) {
+  const overlay = document.getElementById('demo-intro-overlay');
+  if (!overlay) { if (callback) callback(); return; }
+  overlay.style.display = 'flex';
+  setTimeout(() => {
+    overlay.classList.add('fade-out');
+    setTimeout(() => {
+      overlay.style.display = 'none';
+      overlay.classList.remove('fade-out');
+      if (callback) callback();
+    }, 700);
+  }, 2400);
 }
 
 function showLevelUp(title, desc) {
