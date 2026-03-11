@@ -1556,6 +1556,7 @@ function getDemoHeroImage(lessonId) {
   return heroes[lessonId] || `<div class="video-placeholder"><div class="play-btn">▶</div><p>Video coming soon</p></div>`;
 }
 
+function getEmbedHTML(url) {
   if (!url) return '';
   // YouTube
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^&\n?#]+)/);
