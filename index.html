@@ -150,6 +150,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .course-thumb.t1{background:linear-gradient(135deg,rgba(0,229,200,0.15),rgba(0,229,200,0.05));}
 .course-thumb.t2{background:linear-gradient(135deg,rgba(155,93,229,0.15),rgba(155,93,229,0.05));}
 .course-thumb.t3{background:linear-gradient(135deg,rgba(245,200,66,0.12),rgba(245,200,66,0.04));}
+.course-thumb.td{background:linear-gradient(135deg,rgba(155,93,229,0.2),rgba(0,229,200,0.1));border:1px dashed rgba(155,93,229,0.3);}
 .course-thumb-lock{position:absolute;inset:0;background:rgba(8,11,16,0.7);display:flex;align-items:center;justify-content:center;font-size:1.5rem;}
 .course-body{padding:1rem 1.2rem 1.2rem;}
 .course-level-tag{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--violet);margin-bottom:0.5rem;}
@@ -394,6 +395,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="auth-error" id="login-error">Invalid email or password.</div>
       <button class="btn btn-primary btn-full" onclick="handleLogin()">Sign In <span class="arrow">→</span></button>
       <div class="auth-footer">Admin access? <a onclick="handleAdminLogin()">Sign in as admin</a></div>
+      <div class="auth-footer" style="margin-top:0.25rem;">Business demo? <a onclick="handleDemoQuickLogin()" style="color:var(--violet);">View demo</a></div>
     </div>
 
     <!-- Register -->
@@ -461,11 +463,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div style="margin-top:1rem;display:flex;gap:0.5rem;">
           <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
         </div>
+        <!-- Demo mode: show admin builder link -->
+        <div id="demo-admin-link" style="display:none;margin-top:0.75rem;">
+          <button class="btn btn-sm btn-full" style="background:rgba(155,93,229,0.15);color:#9b5de5;border:1px solid rgba(155,93,229,0.35);" onclick="handleDemoAdminView()">⚙ View Course Builder</button>
+        </div>
       </div>
     </aside>
 
     <!-- Main content -->
     <main class="main-content" id="main-content">
+      <!-- Demo mode banner -->
+      <div id="demo-banner" style="display:none;align-items:center;gap:1rem;background:rgba(155,93,229,0.12);border:1px solid rgba(155,93,229,0.3);border-radius:8px;padding:0.75rem 1.2rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <span style="font-size:1.1rem;">🧪</span>
+        <div style="flex:1;min-width:200px;">
+          <span style="font-weight:600;color:#9b5de5;font-size:0.9rem;">Business Demo Mode</span>
+          <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">You're viewing a sample of what contributor training looks like on the Learning Craft AI platform.</span>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(155,93,229,0.2);color:#9b5de5;border:1px solid rgba(155,93,229,0.4);white-space:nowrap;" onclick="handleDemoAdminView()">⚙ View Course Builder →</button>
+      </div>
       <div class="topbar">
         <div class="topbar-title" id="topbar-title">Dashboard</div>
         <div class="topbar-actions">
@@ -687,10 +702,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 // ════════════════════════════════
 const ADMIN_EMAIL = 'admin@learningcraftai.com';
 const ADMIN_PASS  = 'lcai2025admin';
+const DEMO_EMAIL  = 'demo@learningcraftai.com';
+const DEMO_PASS   = 'lcaidemo2026';
 
 let appState = {
   user: null,
   isAdmin: false,
+  isDemo: false,
   currentCourse: null,
   currentLessonIdx: 0,
   quizAnswered: {},
@@ -852,6 +870,81 @@ let courses = [
   }
 ];
 
+// ── Demo course (only visible in demo mode) ──
+const demoCourse = {
+  id: 'course-demo',
+  title: 'AI Contributor Training — Sample Module',
+  level: 'Introductory',
+  desc: 'A sample module demonstrating what structured AI contributor training looks like — covering RLHF, written response evaluation, and rubric design.',
+  emoji: '🧪',
+  thumb: 'td',
+  status: 'live',
+  isDemo: true,
+  lessons: [
+    {
+      id: 'ld1',
+      title: 'What Is RLHF and Why It Depends on You',
+      type: 'video',
+      videoUrl: '',
+      content: 'Reinforcement Learning from Human Feedback (RLHF) is the process by which large language models learn to produce better, safer, and more helpful responses — using human judgment as the training signal. This lesson explains what that means in practice, and why the quality of contributor work directly determines the quality of the model.',
+      keyPoints: [
+        'RLHF uses human ratings and comparisons to fine-tune model behavior',
+        'Contributors are not just data entry workers — they are the quality signal',
+        'A poorly calibrated reviewer produces noisy data that degrades model performance',
+        'Structured training is what separates high-performing contributor teams from high-churn ones'
+      ]
+    },
+    {
+      id: 'ld2',
+      title: 'Evaluating Written Responses: What Good Looks Like',
+      type: 'video',
+      videoUrl: '',
+      content: 'Written response evaluation is one of the most common — and most misunderstood — contributor tasks. This lesson breaks down how to assess a model response across the dimensions that matter: helpfulness, accuracy, clarity, and appropriate tone. We use real example prompts and responses to show how experienced evaluators think through their ratings.',
+      keyPoints: [
+        'Helpfulness: did the response actually address what was asked?',
+        'Accuracy: is every factual claim in the response correct?',
+        'Clarity: is the response easy to understand without being over-simplified?',
+        'Tone: is the register appropriate for the context — professional, conversational, technical?',
+        'A response can pass on three dimensions and fail on one — each is scored independently'
+      ]
+    },
+    {
+      id: 'ld3',
+      title: 'Knowledge Check',
+      type: 'quiz',
+      videoUrl: '',
+      content: '',
+      keyPoints: []
+    }
+  ],
+  quizzes: [
+    {
+      id: 'qd1',
+      question: 'A model response answers the user\'s question accurately, but uses a highly technical tone when the user clearly asked for a simple explanation. How should this be rated?',
+      options: [
+        'High — it answered the question correctly',
+        'High on accuracy, lower on helpfulness and tone — each dimension scored separately',
+        'Low across all dimensions — tone errors invalidate the response',
+        'It cannot be rated without more information'
+      ],
+      correct: 1,
+      explanation: 'Each evaluation dimension is scored independently. A response can be factually correct but still fail on helpfulness or tone. A good evaluator recognizes this and scores accordingly — not averaging across all dimensions, but assessing each one on its own merits.'
+    },
+    {
+      id: 'qd2',
+      question: 'Why does RLHF quality depend so directly on contributor training?',
+      options: [
+        'Because contributors write the code used to train the model',
+        'Because the human ratings contributors produce are the direct signal used to shape model behavior',
+        'Because contributors choose which model architecture to use',
+        'Because poorly trained contributors slow down the annotation pipeline'
+      ],
+      correct: 1,
+      explanation: 'In RLHF, the model learns from human preference signals — the ratings, comparisons, and evaluations contributors produce. If those signals are inconsistent or poorly calibrated, the model learns from noise. Structured contributor training directly improves model quality at the source.'
+    }
+  ]
+};
+
 // Mock leaderboard data
 let leaderboard = [
   { name: 'Alex M.', xp: 2840, level: 8, avatar: 'AM', color: '#00e5c8' },
@@ -885,9 +978,30 @@ function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   if (!email || !pass) { showAuthError('login-error','Please enter email and password.'); return; }
-  // Mock auth — any email/pass combo works for demo
+  // Check for demo credentials
+  if (email === DEMO_EMAIL && pass === DEMO_PASS) { handleDemoLogin(); return; }
+  // Mock auth — any other email/pass combo works for demo
   const name = email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() || 'Learner';
   loginUser({ name: capitalize(name), email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 });
+}
+
+function handleDemoQuickLogin() {
+  handleDemoLogin();
+}
+
+function handleDemoLogin() {
+  appState.isDemo = true;
+  appState.isAdmin = false;
+  appState.user = { name: 'Demo Guest', email: DEMO_EMAIL, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 };
+  // Inject demo course into courses array for this session
+  if (!courses.find(c => c.id === 'course-demo')) courses.push(demoCourse);
+  showView('view-app');
+  renderApp();
+  // Show demo banner
+  setTimeout(() => {
+    const banner = document.getElementById('demo-banner');
+    if (banner) banner.style.display = 'flex';
+  }, 300);
 }
 
 function handleRegister() {
@@ -896,6 +1010,33 @@ function handleRegister() {
   const pass = document.getElementById('reg-pass').value;
   if (!name || !email || !pass) { showAuthError('reg-error','Please fill in all fields.'); return; }
   loginUser({ name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 });
+}
+
+function handleDemoAdminView() {
+  // Show read-only admin panel for demo users
+  appState.isAdmin = true;
+  showView('view-admin');
+  renderAdminCourses();
+  // Add a back button for demo users
+  setTimeout(() => {
+    const existing = document.getElementById('demo-back-btn');
+    if (!existing) {
+      const adminInner = document.querySelector('#view-admin .page-inner');
+      if (adminInner) {
+        const backBtn = document.createElement('div');
+        backBtn.id = 'demo-back-btn';
+        backBtn.style.cssText = 'margin-bottom:1.5rem;';
+        backBtn.innerHTML = '<button class="btn btn-ghost btn-sm" onclick="handleDemoBackToStudent()">← Back to Student View</button>';
+        adminInner.insertBefore(backBtn, adminInner.firstChild);
+      }
+    }
+  }, 100);
+}
+
+function handleDemoBackToStudent() {
+  appState.isAdmin = false;
+  showView('view-app');
+  renderApp();
 }
 
 function handleAdminLogin() {
@@ -971,6 +1112,11 @@ function renderApp() {
   document.getElementById('sidebar-avatar').textContent = u.name.slice(0,2).toUpperCase();
   document.getElementById('sidebar-name').textContent = u.name;
   document.getElementById('topbar-avatar').textContent = u.name.slice(0,2).toUpperCase();
+  // Demo mode UI
+  const demoBanner = document.getElementById('demo-banner');
+  const demoAdminLink = document.getElementById('demo-admin-link');
+  if (demoBanner) demoBanner.style.display = appState.isDemo ? 'flex' : 'none';
+  if (demoAdminLink) demoAdminLink.style.display = appState.isDemo ? 'block' : 'none';
   updateXPBar();
   renderDashboard();
   initFadeIns();
@@ -1014,7 +1160,8 @@ function renderDashboard() {
 function renderCourseCards(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = courses.map((c,i) => `
+  const visibleCourses = courses.filter(c => appState.isDemo ? c.isDemo : !c.isDemo);
+  container.innerHTML = visibleCourses.map((c,i) => `
     <div class="course-card ${i>0?'':''}` + (false?'course-locked':'') + `" onclick="openCourse('${c.id}')">
       <div class="course-thumb ${c.thumb}">${c.emoji}</div>
       <div class="course-body">
