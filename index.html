@@ -105,7 +105,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ── MAIN CONTENT ── */
 .main-content{overflow-y:auto;background:var(--bg);}
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(8,11,16,0.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(8,11,16,0.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;position:relative;}
 .topbar-title{font-family:'DM Sans',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:-0.02em;}
 .topbar-actions{display:flex;align-items:center;gap:1rem;}
 .notif-btn{width:36px;height:36px;border-radius:6px;background:var(--bg2);border:1px solid var(--border-w);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color 0.2s;}
@@ -402,6 +402,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .field-row{grid-template-columns:1fr;}
 }
 
+/* ── NOTIFICATIONS ── */
+.notif-item{display:flex;align-items:flex-start;gap:0.75rem;padding:0.85rem 1.2rem;border-bottom:1px solid var(--border-w);transition:background 0.18s;cursor:default;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:rgba(255,255,255,0.02);}
+.notif-item.unread{background:rgba(0,229,200,0.03);}
+.notif-icon{font-size:1.1rem;flex-shrink:0;margin-top:0.1rem;}
+.notif-text{flex:1;}
+.notif-title{font-size:0.84rem;font-weight:500;margin-bottom:0.2rem;}
+.notif-time{font-size:0.72rem;color:var(--text-dim);}
+.notif-empty{padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;}
+
+/* ── PROFILE MODAL ── */
+.profile-modal-inner{text-align:center;}
+.profile-avatar-lg{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.6rem;color:var(--bg);margin:0 auto 1rem;}
+.profile-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin:1.2rem 0;}
+.profile-stat{background:var(--bg3);border-radius:8px;padding:0.75rem 0.5rem;text-align:center;}
+.profile-stat-val{font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:800;color:var(--cyan);}
+.profile-stat-label{font-size:0.68rem;color:var(--text-muted);margin-top:0.2rem;}
+.profile-badges-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0;}
+
 /* ── ANIMATIONS ── */
 .fade-in{opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .fade-in.visible{opacity:1;transform:translateY(0);}
@@ -564,8 +584,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="topbar">
         <div class="topbar-title" id="topbar-title">Dashboard</div>
         <div class="topbar-actions">
-          <div class="notif-btn"><span>🔔</span><div class="notif-dot"></div></div>
-          <div class="user-avatar" id="topbar-avatar" style="width:32px;height:32px;font-size:0.78rem;">—</div>
+          <div class="notif-btn" id="notif-btn" onclick="toggleNotif(event)"><span>🔔</span><div class="notif-dot" id="notif-dot"></div></div>
+          <div class="user-avatar" id="topbar-avatar" style="width:32px;height:32px;font-size:0.78rem;cursor:pointer;" onclick="openProfile()">—</div>
+        </div>
+        <!-- Notifications dropdown -->
+        <div id="notif-dropdown" style="display:none;position:absolute;top:60px;right:1.5rem;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;z-index:200;box-shadow:0 12px 40px rgba(0,0,0,0.5);overflow:hidden;">
+          <div style="padding:0.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:0.88rem;font-weight:700;">Notifications</span>
+            <span onclick="clearNotifs()" style="font-size:0.75rem;color:var(--cyan);cursor:pointer;">Clear all</span>
+          </div>
+          <div id="notif-list" style="max-height:320px;overflow-y:auto;"></div>
         </div>
       </div>
 
@@ -760,6 +788,29 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- ── PROFILE MODAL ── -->
+<div class="modal-overlay" id="profile-modal" onclick="closeModal('profile-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="closeModal('profile-modal')">✕</span>
+    <div class="profile-modal-inner">
+      <div class="profile-avatar-lg" id="profile-avatar-lg">—</div>
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;" id="profile-name">—</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;" id="profile-email">—</div>
+      <div style="font-size:0.78rem;color:var(--violet);" id="profile-level">Level 1</div>
+      <div class="profile-stat-row">
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
+      </div>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
+      <div class="profile-badges-row" id="profile-badges"></div>
+      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2150,6 +2201,102 @@ function initFadeIns() {
     });
   }, { threshold: 0.05 });
   els.forEach(el => obs.observe(el));
+}
+
+// ════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════
+let notifications = [];
+
+function addNotif(icon, title) {
+  notifications.unshift({ icon, title, time: 'Just now', unread: true });
+  document.getElementById('notif-dot').style.display = 'block';
+}
+
+function toggleNotif(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('notif-dropdown');
+  const isOpen = dd.style.display === 'block';
+  closeAllDropdowns();
+  if (!isOpen) {
+    renderNotifs();
+    dd.style.display = 'block';
+    // Mark all as read
+    notifications.forEach(n => n.unread = false);
+    document.getElementById('notif-dot').style.display = 'none';
+  }
+}
+
+function renderNotifs() {
+  const list = document.getElementById('notif-list');
+  if (!list) return;
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet.<br>Complete a lesson to get started.</div>';
+    return;
+  }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item ${n.unread ? 'unread' : ''}">
+      <div class="notif-icon">${n.icon}</div>
+      <div class="notif-text">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-time">${n.time}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearNotifs() {
+  notifications = [];
+  renderNotifs();
+  document.getElementById('notif-dot').style.display = 'none';
+}
+
+function closeAllDropdowns() {
+  const dd = document.getElementById('notif-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+
+document.addEventListener('click', closeAllDropdowns);
+
+// Hook notifications into existing events
+const _origAddXP = addXP;
+// Hook into showToast to also generate notifications
+const _origShowToast = showToast;
+function showToast(type, icon, msg) {
+  _origShowToast(type, icon, msg);
+  // Generate notification for meaningful events
+  if (type === 'success' && appState.user) {
+    addNotif(icon, msg);
+    renderNotifs();
+  }
+}
+
+// ════════════════════════════════
+// PROFILE
+// ════════════════════════════════
+function openProfile() {
+  const u = appState.user;
+  if (!u) return;
+  document.getElementById('profile-avatar-lg').textContent = u.name.slice(0,2).toUpperCase();
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-email').textContent = u.email;
+  document.getElementById('profile-level').textContent = 'Level ' + u.level;
+  document.getElementById('profile-xp').textContent = u.xp;
+  document.getElementById('profile-lessons').textContent = u.lessonsCompleted.length;
+  document.getElementById('profile-streak').textContent = u.streak;
+  // Badges
+  const badgeContainer = document.getElementById('profile-badges');
+  const earned = allBadges.filter(b => u.badges.includes(b.id));
+  if (earned.length) {
+    badgeContainer.innerHTML = earned.map(b => `
+      <div class="badge earned" style="min-width:60px;padding:0.6rem 0.75rem;">
+        <div class="badge-icon" style="font-size:1.2rem;">${b.icon}</div>
+        <div class="badge-name">${b.name}</div>
+      </div>`).join('');
+  } else {
+    badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
+  }
+  document.getElementById('profile-modal').classList.add('open');
 }
 
 window.addEventListener('load', () => {
