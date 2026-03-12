@@ -1508,8 +1508,9 @@ function loadLesson(idx) {
       videoHtml = `<div class="video-container">${getDemoHeroImage(lesson.id)}</div>`;
     } else {
       videoHtml = `<div class="video-container"><div class="video-placeholder">
-          <div class="play-btn">▶</div>
-          <p>Video lesson — paste your HeyGen, Synthesia, Vimeo, or Google Drive link in the admin panel</p>
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🎬</div>
+          <p style="font-weight:600;color:var(--text);font-size:0.95rem;">Coming Soon</p>
+          <p style="font-size:0.8rem;margin-top:0.25rem;">This video lesson is on its way.</p>
         </div></div>`;
     }
 
