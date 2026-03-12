@@ -1150,8 +1150,21 @@ function handleAdminLogin(email) {
   const resolvedEmail = email || ADMIN_EMAIL;
   const name = resolvedEmail === ADMIN_EMAIL ? 'Admin' : capitalize(resolvedEmail.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim());
   appState.user = { name, email: resolvedEmail };
+  // Ensure admin tabs are injected before rendering
+  ensureAdminTabs();
   showView('view-admin');
   renderAdminCourses();
+}
+
+function ensureAdminTabs() {
+  const inner = document.querySelector('#view-admin .page-inner');
+  if (!inner || inner.querySelector('.admin-tabs')) return;
+  const tabsHtml = `<div class="admin-tabs">
+    <button class="admin-tab active" onclick="adminNavTo('courses')">Courses</button>
+    <button class="admin-tab" onclick="adminNavTo('builder')">Course Builder</button>
+    <button class="admin-tab" onclick="adminNavTo('students')">Students</button>
+  </div>`;
+  inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
 
 function loginUser(user) {
@@ -1888,17 +1901,8 @@ function adminNavTo(panel) {
   if (panel === 'students') renderAdminStudents();
 }
 
-// Inject tabs into admin
-document.addEventListener('DOMContentLoaded', () => {
-  const inner = document.querySelector('#view-admin .page-inner');
-  if (!inner) return;
-  const tabsHtml = `<div class="admin-tabs">
-    <button class="admin-tab active" onclick="adminNavTo('courses')">Courses</button>
-    <button class="admin-tab" onclick="adminNavTo('builder')">Course Builder</button>
-    <button class="admin-tab" onclick="adminNavTo('students')">Students</button>
-  </div>`;
-  inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
-});
+// Inject tabs into admin on load (ensureAdminTabs also called on login)
+document.addEventListener('DOMContentLoaded', () => { ensureAdminTabs(); });
 
 function renderAdminCourses() {
   const container = document.getElementById('admin-courses-list');
