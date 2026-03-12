@@ -436,6 +436,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="auth-tabs">
       <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
       <button class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+      <button class="auth-tab" onclick="switchAuthTab('admin')" style="color:var(--gold);">Admin</button>
     </div>
 
     <!-- Login -->
@@ -450,7 +451,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div class="auth-error" id="login-error">Invalid email or password.</div>
       <button class="btn btn-primary btn-full" onclick="handleLogin()">Sign In <span class="arrow">→</span></button>
-      <div class="auth-footer">Admin access? <a onclick="handleAdminLogin()">Sign in as admin</a></div>
       <div class="auth-footer" style="margin-top:0.25rem;">Business demo? <a onclick="handleDemoQuickLogin()" style="color:var(--violet);">View demo</a></div>
     </div>
 
@@ -470,6 +470,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div class="auth-error" id="reg-error">Please fill in all fields.</div>
       <button class="btn btn-primary btn-full" onclick="handleRegister()">Create Account <span class="arrow">→</span></button>
+    </div>
+
+    <!-- Admin -->
+    <div id="auth-admin" style="display:none;">
+      <div class="form-group">
+        <label>Admin Email</label>
+        <input type="email" id="admin-email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label>Admin Password</label>
+        <input type="password" id="admin-pass" placeholder="••••••••">
+      </div>
+      <div class="auth-error" id="admin-error">Invalid admin credentials.</div>
+      <button class="btn btn-primary btn-full" onclick="handleAdminLoginForm()">Access Admin Panel <span class="arrow">→</span></button>
     </div>
   </div>
 </div>
@@ -764,7 +778,7 @@ const ADMIN_EMAILS = [
   'lauren.mcdonald@learningcraftai.com',
 ];
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for legacy refs
-const ADMIN_PASS  = 'lcai2025admin';
+const ADMIN_PASS  = 'lcai2026@dmin';
 const DEMO_EMAIL  = 'demo@learningcraftai.com';
 const DEMO_PASS   = 'lcaidemo2026';
 
@@ -1032,9 +1046,23 @@ const allBadges = [
 // AUTH
 // ════════════════════════════════
 function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.querySelectorAll('.auth-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')||(i===2&&tab==='admin'));
+  });
   document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
   document.getElementById('auth-register').style.display = tab==='register'?'block':'none';
+  document.getElementById('auth-admin').style.display = tab==='admin'?'block':'none';
+}
+
+function handleAdminLoginForm() {
+  const email = document.getElementById('admin-email').value.trim().toLowerCase();
+  const pass = document.getElementById('admin-pass').value;
+  if (!email || !pass) { showAuthError('admin-error','Please enter your email and password.'); return; }
+  if (ADMIN_EMAILS.includes(email) && pass === ADMIN_PASS) {
+    handleAdminLogin(email);
+  } else {
+    showAuthError('admin-error','Invalid admin credentials.');
+  }
 }
 
 function handleLogin() {
@@ -1043,7 +1071,9 @@ function handleLogin() {
   if (!email || !pass) { showAuthError('login-error','Please enter email and password.'); return; }
   // Check for demo credentials
   if (email === DEMO_EMAIL && pass === DEMO_PASS) { handleDemoLogin(); return; }
-  // Mock auth — any other email/pass combo works for demo
+  // Check for any authorized admin email
+  if (ADMIN_EMAILS.includes(email.toLowerCase()) && pass === ADMIN_PASS) { handleAdminLogin(email); return; }
+  // Mock auth — any other email/pass combo works for students
   const name = email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() || 'Learner';
   loginUser({ name: capitalize(name), email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 });
 }
@@ -1106,9 +1136,11 @@ function handleDemoBackToStudent() {
   renderApp();
 }
 
-function handleAdminLogin() {
+function handleAdminLogin(email) {
   appState.isAdmin = true;
-  appState.user = { name: 'Admin', email: ADMIN_EMAIL };
+  const resolvedEmail = email || ADMIN_EMAIL;
+  const name = resolvedEmail === ADMIN_EMAIL ? 'Admin' : capitalize(resolvedEmail.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim());
+  appState.user = { name, email: resolvedEmail };
   showView('view-admin');
   renderAdminCourses();
 }
