@@ -1057,6 +1057,7 @@ function handleDemoLogin() {
   showDemoIntro(() => {
     showView('view-app');
     renderApp();
+    navigateAfterLogin();
     setTimeout(() => {
       const banner = document.getElementById('demo-banner');
       if (banner) banner.style.display = 'flex';
@@ -1113,6 +1114,7 @@ function loginUser(user) {
   leaderboard.push({ name: user.name, xp: user.xp, level: user.level, avatar: user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
   showView('view-app');
   renderApp();
+  navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
 }
 
@@ -1146,9 +1148,10 @@ function showView(id) {
 }
 
 function navTo(page) {
+  const VALID_NAV = ['dashboard','my-courses','leaderboard','achievements'];
+  if (!VALID_NAV.includes(page)) page = 'dashboard';
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === page));
-  const pages = ['dashboard','my-courses','leaderboard','achievements'];
-  pages.forEach(p => {
+  VALID_NAV.forEach(p => {
     const el = document.getElementById('page-'+p);
     if (el) el.style.display = p===page ? 'block' : 'none';
   });
@@ -1161,11 +1164,30 @@ function navTo(page) {
   if (page === 'my-courses') renderMyCourses();
   initFadeIns();
   window.scrollTo({top:0,behavior:'instant'});
+  // Update hash only when logged in
+  if (appState.user) {
+    history.pushState(null, '', '#' + page);
+  }
 }
 
-// ════════════════════════════════
-// RENDER APP
-// ════════════════════════════════
+// ── HASH ROUTING ──
+const VALID_NAV_PAGES = ['dashboard','my-courses','leaderboard','achievements'];
+
+function loadFromHash() {
+  if (!appState.user) return; // don't route if not logged in
+  const hash = window.location.hash.replace('#','').trim();
+  const page = VALID_NAV_PAGES.includes(hash) ? hash : 'dashboard';
+  navTo(page);
+}
+
+window.addEventListener('hashchange', loadFromHash);
+
+// After login, check hash to land on right page
+function navigateAfterLogin() {
+  const hash = window.location.hash.replace('#','').trim();
+  const page = VALID_NAV_PAGES.includes(hash) ? hash : 'dashboard';
+  navTo(page);
+}
 function renderApp() {
   const u = appState.user;
   // Sidebar
