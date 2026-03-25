@@ -1371,8 +1371,6 @@ function loginUser(user) {
   renderApp();
   navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
-  // Check pilot access after a short delay so dashboard renders first
-  setTimeout(checkPilotAccess, 500);
 }
 
 function handleLogout() {
@@ -1509,9 +1507,8 @@ function renderCourseCards(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const visibleCourses = courses.filter(c => appState.isDemo ? c.isDemo : !c.isDemo);
-  const pilotUnlocked = appState.isAdmin || appState.isDemo || localStorage.getItem('lcai_pilot_unlocked') === '1';
   container.innerHTML = visibleCourses.map((c,i) => `
-    <div class="course-card" onclick="${pilotUnlocked ? `openCourse('${c.id}')` : 'checkPilotAccess()'}">
+    <div class="course-card" onclick="handleCourseClick('${c.id}')">
       <div class="course-thumb ${c.thumb}">${c.emoji}</div>
       <div class="course-body">
         <div class="course-level-tag">${c.level}</div>
@@ -2460,12 +2457,21 @@ function openProfile() {
 // ════════════════════════════════
 // PILOT GATE
 // ════════════════════════════════
-function checkPilotAccess() {
-  if (appState.isAdmin || appState.isDemo) return; // admins and demo bypass
-  const unlocked = localStorage.getItem('lcai_pilot_unlocked') === '1';
-  if (!unlocked) {
-    document.getElementById('pilot-gate-modal').classList.add('open');
+function isPilotUnlocked() {
+  return appState.isAdmin || appState.isDemo || localStorage.getItem('lcai_pilot_unlocked') === '1';
+}
+
+function handleCourseClick(courseId) {
+  if (isPilotUnlocked()) {
+    openCourse(courseId);
+  } else {
+    checkPilotAccess();
   }
+}
+
+function checkPilotAccess() {
+  if (isPilotUnlocked()) return;
+  document.getElementById('pilot-gate-modal').classList.add('open');
 }
 
 function submitPilotCode() {
@@ -2545,7 +2551,6 @@ window.addEventListener('load', async () => {
       showView('view-app');
       renderApp();
       navTo(lastPage);
-      setTimeout(checkPilotAccess, 500);
     } else {
       const auth = document.getElementById('view-auth');
       auth.style.display = 'flex';
