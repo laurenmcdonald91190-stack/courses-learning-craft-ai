@@ -827,6 +827,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- ── TOAST ── -->
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✓</span><span id="toast-msg">Done.</span></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ════════════════════════════════
+// SUPABASE CLIENT
+// ════════════════════════════════
+const SUPABASE_URL = 'https://eayhhviiyxyarjxnjndi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVheWhodmlpeXh5YXJqeG5qbmRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTAwNjksImV4cCI6MjA4ODkyNjA2OX0._A0zPvurSrq6DB7OPz4FUPURlxBbwnWMFiMgkVmua3g';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+</script>
 <script>
 // ════════════════════════════════
 // STATE
@@ -1126,7 +1136,7 @@ function handleAdminLoginForm() {
   }
 }
 
-function handleLogin() {
+async function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   if (!email || !pass) { showAuthError('login-error','Please enter email and password.'); return; }
@@ -1134,9 +1144,77 @@ function handleLogin() {
   if (email === DEMO_EMAIL && pass === DEMO_PASS) { handleDemoLogin(); return; }
   // Check for any authorized admin email
   if (ADMIN_EMAILS.includes(email.toLowerCase()) && pass === ADMIN_PASS) { handleAdminLogin(email); return; }
-  // Mock auth — any other email/pass combo works for students
-  const name = email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() || 'Learner';
-  loginUser({ name: capitalize(name), email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 });
+  // Real Supabase auth
+  const btn = document.querySelector('#view-auth .tab-content.active .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
+  try {
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      showAuthError('login-error', error.message === 'Invalid login credentials' ? 'Incorrect email or password.' : error.message);
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Sign In <span class="arrow">→</span>'; }
+      return;
+    }
+    const name = capitalize((data.user.user_metadata?.name || email.split('@')[0]).replace(/[^a-zA-Z]/g,' ').trim() || 'Learner');
+    const userData = await loadSupabaseProfile(data.user.id, name, email);
+    loginUser(userData);
+  } catch(e) {
+    showAuthError('login-error', 'Something went wrong. Please try again.');
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Sign In <span class="arrow">→</span>'; }
+  }
+}
+
+// ════════════════════════════════
+// SUPABASE HELPERS
+// ════════════════════════════════
+async function loadSupabaseProfile(uid, name, email) {
+  try {
+    // Load or create XP record
+    let { data: xpData } = await _supabase.from('user_xp').select('*').eq('user_id', uid).single();
+    if (!xpData) {
+      await _supabase.from('user_xp').insert({ user_id: uid, xp: 0, level: 1, streak: 1, last_active: new Date().toISOString() });
+      xpData = { xp: 0, level: 1, streak: 1 };
+    }
+    // Load completed lessons
+    const { data: progressData } = await _supabase.from('course_progress').select('course_id,lesson_id').eq('user_id', uid).eq('completed', true);
+    const lessonsCompleted = (progressData || []).map(r => r.course_id + '-' + r.lesson_id);
+    // Ensure profile exists
+    await _supabase.from('profiles').upsert({ id: uid, email, role: 'student' });
+    return {
+      name, email,
+      supabaseId: uid,
+      xp: xpData.xp || 0,
+      level: xpData.level || 1,
+      streak: xpData.streak || 1,
+      lessonsCompleted,
+      correctAnswers: 0,
+      badges: []
+    };
+  } catch(e) {
+    console.warn('Supabase load failed, using defaults', e);
+    return { name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 };
+  }
+}
+
+async function saveProgressToSupabase(courseId, lessonId) {
+  const u = appState.user;
+  if (!u || !u.supabaseId || appState.isDemo || appState.isAdmin) return;
+  try {
+    await _supabase.from('course_progress').upsert({
+      user_id: u.supabaseId, course_id: courseId, lesson_id: lessonId,
+      completed: true, completed_at: new Date().toISOString()
+    }, { onConflict: 'user_id,course_id,lesson_id' });
+  } catch(e) { console.warn('Progress save failed', e); }
+}
+
+async function saveXPToSupabase() {
+  const u = appState.user;
+  if (!u || !u.supabaseId || appState.isDemo || appState.isAdmin) return;
+  try {
+    await _supabase.from('user_xp').upsert({
+      user_id: u.supabaseId, xp: u.xp, level: u.level,
+      streak: u.streak, last_active: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+  } catch(e) { console.warn('XP save failed', e); }
 }
 
 function handleDemoQuickLogin() {
@@ -1162,12 +1240,34 @@ function handleDemoLogin() {
   });
 }
 
-function handleRegister() {
+async function handleRegister() {
   const name = document.getElementById('reg-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pass = document.getElementById('reg-pass').value;
   if (!name || !email || !pass) { showAuthError('reg-error','Please fill in all fields.'); return; }
-  loginUser({ name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 });
+  if (pass.length < 6) { showAuthError('reg-error','Password must be at least 6 characters.'); return; }
+  const btn = document.querySelector('#view-auth .tab-content.active .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating account...'; }
+  try {
+    const { data, error } = await _supabase.auth.signUp({ email, password: pass, options: { data: { name } } });
+    if (error) {
+      showAuthError('reg-error', error.message);
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Create Account <span class="arrow">→</span>'; }
+      return;
+    }
+    if (data.user && !data.session) {
+      // Email confirmation required
+      showAuthError('reg-error', '✅ Check your email to confirm your account, then sign in.');
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Create Account <span class="arrow">→</span>'; }
+      return;
+    }
+    // Auto-confirmed — create profile and log in
+    await _supabase.from('profiles').upsert({ id: data.user.id, email, role: 'student' });
+    loginUser({ name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1, supabaseId: data.user.id });
+  } catch(e) {
+    showAuthError('reg-error', 'Something went wrong. Please try again.');
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Create Account <span class="arrow">→</span>'; }
+  }
 }
 
 function handleDemoAdminView() {
@@ -1792,6 +1892,7 @@ function completeLesson(idx) {
 
   if (!u.lessonsCompleted.includes(key)) {
     u.lessonsCompleted.push(key);
+    saveProgressToSupabase(course.id, lesson.id);
     if (lesson.type !== 'quiz') {
       addXP(50);
       spawnXPPop('+50 XP');
@@ -1850,6 +1951,7 @@ function addXP(amount) {
   const prevLevel = u.level;
   u.xp += amount;
   updateXPBar();
+  saveXPToSupabase();
   const newLevel = u.level;
   if (newLevel > prevLevel) {
     setTimeout(() => showLevelUp(`Level ${newLevel} Unlocked! 🚀`, `You've reached Level ${newLevel}. Keep going — you're building real skills.`), 800);
