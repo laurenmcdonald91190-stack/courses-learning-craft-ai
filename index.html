@@ -867,10 +867,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 // ════════════════════════════════
 const SUPABASE_URL = 'https://eayhhviiyxyarjxnjndi.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVheWhodmlpeXh5YXJqeG5qbmRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzNTAwNjksImV4cCI6MjA4ODkyNjA2OX0._A0zPvurSrq6DB7OPz4FUPURlxBbwnWMFiMgkVmua3g';
-const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    storageKey: 'lcai-auth',
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 
-</script>
-<script>
 // ════════════════════════════════
 // STATE
 // ════════════════════════════════
@@ -1260,6 +1266,7 @@ function handleDemoLogin() {
   appState.isDemo = true;
   appState.isAdmin = false;
   appState.user = { name: 'Demo Guest', email: DEMO_EMAIL, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 };
+  try { localStorage.setItem('lcai_session_type', 'demo'); } catch(e) {}
   if (!courses.find(c => c.id === 'course-demo')) courses.push(demoCourse);
   // Show intro overlay first, then reveal the app
   const overlay = document.getElementById('demo-intro-overlay');
@@ -1337,6 +1344,7 @@ function handleAdminLogin(email) {
   const resolvedEmail = email || ADMIN_EMAIL;
   const name = resolvedEmail === ADMIN_EMAIL ? 'Admin' : capitalize(resolvedEmail.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim());
   appState.user = { name, email: resolvedEmail };
+  try { localStorage.setItem('lcai_session_type', 'admin'); localStorage.setItem('lcai_session_email', resolvedEmail); } catch(e) {}
   // Ensure admin tabs are injected before rendering
   ensureAdminTabs();
   showView('view-admin');
@@ -1370,6 +1378,13 @@ function loginUser(user) {
 function handleLogout() {
   appState.user = null;
   appState.isAdmin = false;
+  appState.isDemo = false;
+  try {
+    localStorage.removeItem('lcai_session_type');
+    localStorage.removeItem('lcai_session_email');
+    localStorage.removeItem('lcai_last_page');
+  } catch(e) {}
+  _supabase.auth.signOut().catch(()=>{});
   showView('view-auth');
 }
 
@@ -1399,6 +1414,8 @@ function showView(id) {
 function navTo(page) {
   const VALID_NAV = ['dashboard','my-courses','leaderboard','achievements'];
   if (!VALID_NAV.includes(page)) page = 'dashboard';
+  // Save current page for refresh restore
+  try { localStorage.setItem('lcai_last_page', page); } catch(e) {}
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === page));
   VALID_NAV.forEach(p => {
     const el = document.getElementById('page-'+p);
@@ -2496,19 +2513,45 @@ window.addEventListener('load', async () => {
   // Hide all views while we check session
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
 
+  const sessionType = localStorage.getItem('lcai_session_type');
+  const lastPage = localStorage.getItem('lcai_last_page') || 'dashboard';
+
   try {
+    // Restore admin session
+    if (sessionType === 'admin') {
+      const email = localStorage.getItem('lcai_session_email') || ADMIN_EMAIL;
+      handleAdminLogin(email);
+      initFadeIns();
+      return;
+    }
+
+    // Restore demo session
+    if (sessionType === 'demo') {
+      handleDemoLogin();
+      initFadeIns();
+      return;
+    }
+
+    // Restore student session via Supabase
     const { data: { session } } = await _supabase.auth.getSession();
     if (session && session.user) {
       const u = session.user;
       const name = capitalize((u.user_metadata?.name || u.email.split('@')[0]).replace(/[^a-zA-Z]/g,' ').trim() || 'Learner');
       const userData = await loadSupabaseProfile(u.id, name, u.email);
-      loginUser(userData);
+      // loginUser handles showView + renderApp, then restore last page
+      appState.user = userData;
+      appState.isAdmin = false;
+      leaderboard.push({ name: userData.name, xp: userData.xp, level: userData.level, avatar: userData.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+      showView('view-app');
+      renderApp();
+      navTo(lastPage);
+      setTimeout(checkPilotAccess, 500);
     } else {
       const auth = document.getElementById('view-auth');
       auth.style.display = 'flex';
     }
   } catch(e) {
-    console.warn('Session check failed', e);
+    console.warn('Session restore failed', e);
     const auth = document.getElementById('view-auth');
     auth.style.display = 'flex';
   }
