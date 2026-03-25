@@ -814,6 +814,38 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- ── PILOT GATE MODAL ── -->
+<div class="modal-overlay" id="pilot-gate-modal">
+  <div class="modal" style="max-width:480px;" onclick="event.stopPropagation()">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.75rem;">🔒</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.5rem;">Courses are in Pilot</h2>
+      <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.6;">We're currently running a small pilot group. Enter your pilot access code to unlock all 3 courses, or join the waitlist to be notified when we open enrollment.</p>
+    </div>
+
+    <div style="margin-bottom:1.25rem;">
+      <label style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.5rem;">Pilot Access Code</label>
+      <div style="display:flex;gap:0.5rem;">
+        <input type="text" id="pilot-code-input" placeholder="Enter your code" style="flex:1;text-transform:uppercase;letter-spacing:0.08em;" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn btn-primary" onclick="submitPilotCode()" style="white-space:nowrap;">Unlock →</button>
+      </div>
+      <div id="pilot-code-error" style="font-size:0.8rem;color:#ff6b6b;margin-top:0.4rem;display:none;">Invalid code. Check with Lauren for your pilot access code.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border-w);padding-top:1.25rem;">
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;text-align:center;">Don't have a code? Join the waitlist and we'll reach out when enrollment opens.</p>
+      <div id="pilot-waitlist-form">
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.6rem;">
+          <input type="text" id="pw-name" placeholder="Your name" style="flex:1;">
+          <input type="email" id="pw-email" placeholder="your@email.com" style="flex:1;">
+        </div>
+        <button class="btn btn-outline-v btn-full" style="width:100%;justify-content:center;" onclick="submitPilotWaitlist()">Join the Waitlist <span class="arrow">→</span></button>
+        <div id="pilot-waitlist-success" style="display:none;text-align:center;color:var(--cyan);font-size:0.85rem;margin-top:0.75rem;">✓ You're on the list — we'll be in touch soon!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── LEVEL UP MODAL ── -->
 <div class="modal-overlay" id="levelup-modal">
   <div class="modal level-up-modal">
@@ -850,6 +882,8 @@ const ADMIN_EMAILS = [
 ];
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for legacy refs
 const ADMIN_PASS  = 'lcai2026@dmin';
+const PILOT_CODE  = 'LCPILOT2026';
+const WAITLIST_FORM = 'https://formspree.io/f/mnjoagzj';
 const DEMO_EMAIL  = 'demo@learningcraftai.com';
 const DEMO_PASS   = 'lcaidemo2026';
 
@@ -866,7 +900,7 @@ let appState = {
 let courses = [
   {
     id: 'course-1',
-    title: 'Intro to AI Model Training Platforms',
+    title: 'Intro to AI Training Platforms',
     level: 'Introductory',
     desc: 'Understand how AI training pipelines work, what contributors do, and how quality is measured.',
     emoji: '🤖',
@@ -928,8 +962,8 @@ let courses = [
   },
   {
     id: 'course-2',
-    title: 'Prompt Evaluation Fundamentals',
-    level: 'Intermediate',
+    title: 'Intro to Model Training',
+    level: 'Introductory',
     desc: 'Learn the rating frameworks, quality criteria, and judgment skills used in real AI evaluation environments.',
     emoji: '📋',
     thumb: 't2',
@@ -971,8 +1005,8 @@ let courses = [
   },
   {
     id: 'course-3',
-    title: 'AI Training Reviewer Fundamentals',
-    level: 'Advanced',
+    title: 'Tasking Fundamentals',
+    level: 'Introductory',
     desc: 'A comprehensive program covering the core skills and workflows required for reviewer-level roles in AI training programs.',
     emoji: '🎯',
     thumb: 't3',
@@ -1328,6 +1362,8 @@ function loginUser(user) {
   renderApp();
   navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
+  // Check pilot access after a short delay so dashboard renders first
+  setTimeout(checkPilotAccess, 500);
 }
 
 function handleLogout() {
@@ -1455,8 +1491,9 @@ function renderCourseCards(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const visibleCourses = courses.filter(c => appState.isDemo ? c.isDemo : !c.isDemo);
+  const pilotUnlocked = appState.isAdmin || appState.isDemo || localStorage.getItem('lcai_pilot_unlocked') === '1';
   container.innerHTML = visibleCourses.map((c,i) => `
-    <div class="course-card ${i>0?'':''}` + (false?'course-locked':'') + `" onclick="openCourse('${c.id}')">
+    <div class="course-card" onclick="${pilotUnlocked ? `openCourse('${c.id}')` : 'checkPilotAccess()'}">
       <div class="course-thumb ${c.thumb}">${c.emoji}</div>
       <div class="course-body">
         <div class="course-level-tag">${c.level}</div>
@@ -2400,6 +2437,58 @@ function openProfile() {
     badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
   }
   document.getElementById('profile-modal').classList.add('open');
+}
+
+// ════════════════════════════════
+// PILOT GATE
+// ════════════════════════════════
+function checkPilotAccess() {
+  if (appState.isAdmin || appState.isDemo) return; // admins and demo bypass
+  const unlocked = localStorage.getItem('lcai_pilot_unlocked') === '1';
+  if (!unlocked) {
+    document.getElementById('pilot-gate-modal').classList.add('open');
+  }
+}
+
+function submitPilotCode() {
+  const code = document.getElementById('pilot-code-input').value.trim().toUpperCase();
+  const errEl = document.getElementById('pilot-code-error');
+  if (code === PILOT_CODE) {
+    localStorage.setItem('lcai_pilot_unlocked', '1');
+    document.getElementById('pilot-gate-modal').classList.remove('open');
+    errEl.style.display = 'none';
+    showToast('success', '🎉', 'Pilot access unlocked! Welcome to Learning Craft AI.');
+  } else {
+    errEl.style.display = 'block';
+  }
+}
+
+async function submitPilotWaitlist() {
+  const name = document.getElementById('pw-name').value.trim();
+  const email = document.getElementById('pw-email').value.trim();
+  if (!name || !email) return;
+  const btn = document.querySelector('#pilot-waitlist-form .btn-outline-v');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  try {
+    const res = await fetch(WAITLIST_FORM, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, source: 'Course Platform Waitlist' })
+    });
+    if (res.ok) {
+      document.getElementById('pilot-waitlist-success').style.display = 'block';
+      document.getElementById('pw-name').style.display = 'none';
+      document.getElementById('pw-email').style.display = 'none';
+      btn.style.display = 'none';
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Error — try again';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Error — try again';
+  }
 }
 
 window.addEventListener('load', () => {
