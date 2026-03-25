@@ -2492,11 +2492,27 @@ async function submitPilotWaitlist() {
   }
 }
 
-window.addEventListener('load', () => {
-  // Hide all views then show auth
+window.addEventListener('load', async () => {
+  // Hide all views while we check session
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-  const auth = document.getElementById('view-auth');
-  auth.style.display = 'flex';
+
+  try {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session && session.user) {
+      const u = session.user;
+      const name = capitalize((u.user_metadata?.name || u.email.split('@')[0]).replace(/[^a-zA-Z]/g,' ').trim() || 'Learner');
+      const userData = await loadSupabaseProfile(u.id, name, u.email);
+      loginUser(userData);
+    } else {
+      const auth = document.getElementById('view-auth');
+      auth.style.display = 'flex';
+    }
+  } catch(e) {
+    console.warn('Session check failed', e);
+    const auth = document.getElementById('view-auth');
+    auth.style.display = 'flex';
+  }
+
   initFadeIns();
 });
 </script>
