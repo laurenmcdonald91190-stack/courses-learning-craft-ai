@@ -817,6 +817,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- ── PILOT GATE MODAL ── -->
 <div class="modal-overlay" id="pilot-gate-modal">
   <div class="modal" style="max-width:480px;" onclick="event.stopPropagation()">
+    <span class="modal-close" onclick="document.getElementById('pilot-gate-modal').classList.remove('open')">✕</span>
     <div style="text-align:center;margin-bottom:1.5rem;">
       <div style="font-size:2rem;margin-bottom:0.75rem;">🔒</div>
       <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.5rem;">Courses are in Pilot</h2>
