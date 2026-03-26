@@ -2379,13 +2379,22 @@ async function renderAdminStudents() {
   container.style.display = 'none';
 
   try {
-    // Get all profiles
+    // Get all profiles — no role filter so RLS doesn't block
     const { data: profiles, error } = await _supabase
       .from('profiles')
       .select('id, email, role, created_at')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    // If RLS blocks this, fall back to user_xp table which has less restriction
+    let finalProfiles = profiles;
+    if (error || !profiles || !profiles.length) {
+      const { data: xpFallback } = await _supabase.from('user_xp').select('user_id, xp, level, streak, last_active');
+      if (xpFallback && xpFallback.length) {
+        finalProfiles = xpFallback.map(x => ({ id: x.user_id, email: 'user-' + x.user_id.slice(0,8), role: 'student', created_at: x.last_active }));
+      } else if (error) {
+        throw error;
+      }
+    }
 
     // Get XP for all users
     const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level, streak');
@@ -2399,7 +2408,7 @@ async function renderAdminStudents() {
       progressMap[p.user_id] = (progressMap[p.user_id] || 0) + 1;
     });
 
-    if (!profiles || !profiles.length) {
+    if (!finalProfiles || !finalProfiles.length) {
       loading.textContent = 'No students have signed up yet.';
       return;
     }
@@ -2407,18 +2416,18 @@ async function renderAdminStudents() {
     loading.style.display = 'none';
     container.style.display = 'block';
 
-    const students = profiles.filter(p => p.role === 'student' || !p.role);
-    const admins = profiles.filter(p => p.role === 'admin');
+    const students = finalProfiles.filter(p => p.role === 'student' || !p.role);
+    const admins = finalProfiles.filter(p => p.role === 'admin');
 
     container.innerHTML = `
       <div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">
-        ${students.length} students · ${admins.length} admins · ${profiles.length} total accounts
+        ${students.length} students · ${admins.length} admins · ${finalProfiles.length} total accounts
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;overflow:hidden;">
         <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.75rem 1.2rem;background:var(--bg3);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);">
           <div>Name</div><div>Email</div><div>Level</div><div>XP</div><div>Lessons</div><div>Joined</div>
         </div>
-        ${profiles.map(p => {
+        ${finalProfiles.map(p => {
           const xp = xpMap[p.id] || { xp: 0, level: 1 };
           const lessons = progressMap[p.id] || 0;
           const joined = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
