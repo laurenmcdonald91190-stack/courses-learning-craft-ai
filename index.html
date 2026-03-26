@@ -298,6 +298,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .video-container svg{display:block;width:100%;height:100%;border-radius:10px;}
 .video-container{background:#080b10;border-radius:10px;overflow:hidden;}
 
+
 .player-meta{display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;flex-wrap:wrap;}
 .meta-chip{display:flex;align-items:center;gap:0.4rem;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--text-muted);background:var(--bg2);border:1px solid var(--border-w);padding:0.35rem 0.75rem;border-radius:100px;}
 .meta-chip .chip-val{color:var(--cyan);}
@@ -420,20 +421,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .profile-stat-val{font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:800;color:var(--cyan);}
 .profile-stat-label{font-size:0.68rem;color:var(--text-muted);margin-top:0.2rem;}
 .profile-badges-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0;}
-
-/* ── PROFILE TABS ── */
-.profile-tabs{display:flex;gap:0;border:1px solid var(--border-w);border-radius:6px;margin-bottom:1.5rem;overflow:hidden;}
-.profile-tab{flex:1;padding:0.5rem;font-size:0.8rem;font-weight:500;text-align:center;cursor:pointer;background:transparent;border:none;color:var(--text-muted);transition:all 0.2s;font-family:'DM Sans',sans-serif;}
-.profile-tab.active{background:rgba(0,229,200,0.1);color:var(--cyan);}
-.profile-section{display:none;}
-.profile-section.active{display:block;}
-.profile-edit-field{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;text-align:left;}
-.profile-edit-field label{font-family:'DM Sans',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);}
-.profile-edit-field input{background:var(--bg);border:1px solid var(--border-w);border-radius:5px;padding:0.65rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;width:100%;}
-.profile-edit-field input:focus{border-color:rgba(0,229,200,0.4);}
-.profile-msg{font-size:0.8rem;margin-top:0.5rem;display:none;text-align:left;}
-.profile-msg.success{color:var(--cyan);}
-.profile-msg.error{color:#ff6b6b;}
 
 /* ── PRACTICE TASKS ── */
 .practice-wrap{display:flex;flex-direction:column;gap:1.5rem;}
@@ -601,6 +588,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div style="margin-top:1rem;display:flex;gap:0.5rem;">
           <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
         </div>
+        <!-- Demo mode: show admin builder link -->
         <div id="demo-admin-link" style="display:none;margin-top:0.75rem;">
           <button class="btn btn-sm btn-full" style="background:rgba(155,93,229,0.15);color:#9b5de5;border:1px solid rgba(155,93,229,0.35);" onclick="handleDemoAdminView()">⚙ View Course Builder</button>
         </div>
@@ -609,6 +597,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
     <!-- Main content -->
     <main class="main-content" id="main-content">
+      <!-- Demo mode banner -->
       <div id="demo-banner" style="display:none;align-items:center;gap:1rem;background:rgba(155,93,229,0.12);border:1px solid rgba(155,93,229,0.3);border-radius:8px;padding:0.75rem 1.2rem;margin-bottom:1.25rem;flex-wrap:wrap;">
         <span style="font-size:1.1rem;">🧪</span>
         <div style="flex:1;min-width:200px;">
@@ -623,6 +612,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div class="notif-btn" id="notif-btn" onclick="toggleNotif(event)"><span>🔔</span><div class="notif-dot" id="notif-dot"></div></div>
           <div class="user-avatar" id="topbar-avatar" style="width:32px;height:32px;font-size:0.78rem;cursor:pointer;" onclick="openProfile()">—</div>
         </div>
+        <!-- Notifications dropdown -->
         <div id="notif-dropdown" style="display:none;position:absolute;top:60px;right:1.5rem;width:320px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;z-index:200;box-shadow:0 12px 40px rgba(0,0,0,0.5);overflow:hidden;">
           <div style="padding:0.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
             <span style="font-size:0.88rem;font-weight:700;">Notifications</span>
@@ -854,59 +844,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profile-modal" onclick="closeModal('profile-modal')">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:500px;">
+  <div class="modal" onclick="event.stopPropagation()">
     <span class="modal-close" onclick="closeModal('profile-modal')">✕</span>
     <div class="profile-modal-inner">
       <div class="profile-avatar-lg" id="profile-avatar-lg">—</div>
       <div style="font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;" id="profile-name">—</div>
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;" id="profile-email">—</div>
-      <div style="font-size:0.78rem;color:var(--violet);margin-bottom:1.25rem;" id="profile-level">Level 1</div>
-
-      <div class="profile-tabs">
-        <button class="profile-tab active" onclick="switchProfileTab('stats')">Stats</button>
-        <button class="profile-tab" onclick="switchProfileTab('edit')">Edit Profile</button>
-        <button class="profile-tab" onclick="switchProfileTab('password')">Password</button>
+      <div style="font-size:0.78rem;color:var(--violet);" id="profile-level">Level 1</div>
+      <div class="profile-stat-row">
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
       </div>
-
-      <!-- Stats tab -->
-      <div class="profile-section active" id="profile-tab-stats">
-        <div class="profile-stat-row">
-          <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
-          <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
-          <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
-        </div>
-        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
-        <div class="profile-badges-row" id="profile-badges"></div>
-        <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
-          <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
-        </div>
-      </div>
-
-      <!-- Edit Profile tab -->
-      <div class="profile-section" id="profile-tab-edit">
-        <div class="profile-edit-field">
-          <label>Display Name</label>
-          <input type="text" id="edit-name" placeholder="Your full name">
-        </div>
-        <div id="edit-name-msg" class="profile-msg"></div>
-        <button class="btn btn-primary btn-full" onclick="saveProfileName()" style="margin-top:0.5rem;">Save Name</button>
-      </div>
-
-      <!-- Password tab -->
-      <div class="profile-section" id="profile-tab-password">
-        <div class="profile-edit-field">
-          <label>New Password</label>
-          <div style="position:relative;">
-            <input type="password" id="new-password" placeholder="At least 6 characters" style="padding-right:2.8rem;">
-            <span onclick="togglePw('new-password',this)" style="position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);cursor:pointer;font-size:0.8rem;color:var(--text-muted);user-select:none;">Show</span>
-          </div>
-        </div>
-        <div class="profile-edit-field">
-          <label>Confirm New Password</label>
-          <input type="password" id="confirm-password" placeholder="Repeat password">
-        </div>
-        <div id="edit-password-msg" class="profile-msg"></div>
-        <button class="btn btn-primary btn-full" onclick="savePassword()" style="margin-top:0.5rem;">Update Password</button>
+      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
+      <div class="profile-badges-row" id="profile-badges"></div>
+      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
       </div>
     </div>
   </div>
@@ -921,6 +874,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.5rem;">Courses are in Pilot</h2>
       <p style="font-size:0.9rem;color:var(--text-muted);line-height:1.6;">We're currently running a small pilot group. Enter your pilot access code to unlock all 3 courses, or join the waitlist to be notified when we open enrollment.</p>
     </div>
+
     <div style="margin-bottom:1.25rem;">
       <label style="font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.5rem;">Pilot Access Code</label>
       <div style="display:flex;gap:0.5rem;">
@@ -929,6 +883,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
       <div id="pilot-code-error" style="font-size:0.8rem;color:#ff6b6b;margin-top:0.4rem;display:none;">Invalid code. Check with Lauren for your pilot access code.</div>
     </div>
+
     <div style="border-top:1px solid var(--border-w);padding-top:1.25rem;">
       <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;text-align:center;">Don't have a code? Join the waitlist and we'll reach out when enrollment opens.</p>
       <div id="pilot-waitlist-form">
@@ -984,7 +939,7 @@ const ADMIN_EMAILS = [
   'lauren.mcdonald91190@gmail.com',
   'ricky.n.quiroz@gmail.com',
 ];
-const ADMIN_EMAIL = ADMIN_EMAILS[0];
+const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for legacy refs
 const ADMIN_PASS  = 'lcai2026@dmin';
 const PILOT_CODE  = 'LCPILOT2026';
 const WAITLIST_FORM = 'https://formspree.io/f/mnjoagzj';
@@ -1000,6 +955,7 @@ let appState = {
   quizAnswered: {},
 };
 
+// ── Default courses (students always see these) ──
 let courses = [
   {
     id: 'course-1',
@@ -1010,16 +966,57 @@ let courses = [
     thumb: 't1',
     status: 'live',
     lessons: [
-      { id: 'l1', title: 'Welcome & Course Overview', type: 'video', videoUrl: '', content: 'In this course you will learn how AI training pipelines are structured, what contributor roles do, and how quality is measured across the full workflow.', keyPoints: ['AI training is a human-in-the-loop process', 'Contributors provide the signal that trains models', 'Quality directly affects model performance'] },
-      { id: 'l2', title: 'How AI Training Workflows Are Structured', type: 'video', videoUrl: '', content: 'AI training programs are broken into discrete tasks that contributors complete. These tasks generate the data used to fine-tune and evaluate language models.', keyPoints: ['Tasks are distributed through platforms like Scale, Appen, or proprietary tools', 'Each task type has its own rubric and quality standard', 'Workflow structure varies by organization and model type'] },
-      { id: 'l3', title: 'What Contributor Roles Do', type: 'video', videoUrl: '', content: 'Contributors are the backbone of AI training. Their work — rating, writing, editing, and evaluating — teaches models how to behave.', keyPoints: ['Raters assess model outputs against rubrics', 'Writers create prompts and ideal responses', 'Reviewers QA contributor work for consistency'] },
-      { id: 'l4', title: 'How Tasks Are Evaluated', type: 'video', videoUrl: '', content: 'Every task submitted by a contributor is evaluated for quality. Understanding how evaluation works helps you perform better and advance faster.', keyPoints: ['Rubrics define what a good response looks like', 'Inter-rater reliability measures consistency across reviewers', 'Calibration sessions align reviewers to shared standards'] },
-      { id: 'l5', title: 'Knowledge Check', type: 'quiz', videoUrl: '', content: '', keyPoints: [] }
+      {
+        id: 'l1', title: 'Welcome & Course Overview', type: 'video',
+        videoUrl: '',
+        content: 'In this course you will learn how AI training pipelines are structured, what contributor roles do, and how quality is measured across the full workflow.',
+        keyPoints: ['AI training is a human-in-the-loop process', 'Contributors provide the signal that trains models', 'Quality directly affects model performance']
+      },
+      {
+        id: 'l2', title: 'How AI Training Workflows Are Structured', type: 'video',
+        videoUrl: '',
+        content: 'AI training programs are broken into discrete tasks that contributors complete. These tasks generate the data used to fine-tune and evaluate language models.',
+        keyPoints: ['Tasks are distributed through platforms like Scale, Appen, or proprietary tools', 'Each task type has its own rubric and quality standard', 'Workflow structure varies by organization and model type']
+      },
+      {
+        id: 'l3', title: 'What Contributor Roles Do', type: 'video',
+        videoUrl: '',
+        content: 'Contributors are the backbone of AI training. Their work — rating, writing, editing, and evaluating — teaches models how to behave.',
+        keyPoints: ['Raters assess model outputs against rubrics', 'Writers create prompts and ideal responses', 'Reviewers QA contributor work for consistency']
+      },
+      {
+        id: 'l4', title: 'How Tasks Are Evaluated', type: 'video',
+        videoUrl: '',
+        content: 'Every task submitted by a contributor is evaluated for quality. Understanding how evaluation works helps you perform better and advance faster.',
+        keyPoints: ['Rubrics define what a good response looks like', 'Inter-rater reliability measures consistency across reviewers', 'Calibration sessions align reviewers to shared standards']
+      },
+      {
+        id: 'l5', title: 'Knowledge Check', type: 'quiz',
+        videoUrl: '', content: '', keyPoints: []
+      }
     ],
     quizzes: [
-      { id: 'q1', question: 'What is the primary role of a contributor in an AI training program?', options: ['To write the code that trains the model', 'To provide human signal — ratings, responses, and evaluations — used to train and improve models', 'To manage the infrastructure that runs training jobs', 'To design the user interface of AI products'], correct: 1, explanation: 'Contributors provide the human signal (ratings, annotations, evaluations) that teaches models how to behave. This is fundamentally different from engineering or product roles.' },
-      { id: 'q2', question: 'What does inter-rater reliability measure?', options: ['How fast contributors complete tasks', 'How much contributors are paid per task', 'How consistently multiple reviewers apply the same standards to the same content', 'The number of tasks available on a platform'], correct: 2, explanation: 'Inter-rater reliability (IRR) measures agreement between reviewers. High IRR means the team is applying rubrics consistently — which is critical for producing clean training data.' },
-      { id: 'q3', question: 'Why does contributor quality directly affect model performance?', options: ['Because contributors choose which model architecture to use', 'Because the data contributors generate is what the model learns from', 'Because contributors set the model\'s temperature and parameters', 'Because contributors write the system prompts for deployed models'], correct: 1, explanation: 'The model learns from the data contributors produce. If that data is inconsistent, poorly calibrated, or low quality, the model will reflect those flaws in its outputs.' }
+      {
+        id: 'q1',
+        question: 'What is the primary role of a contributor in an AI training program?',
+        options: ['To write the code that trains the model', 'To provide human signal — ratings, responses, and evaluations — used to train and improve models', 'To manage the infrastructure that runs training jobs', 'To design the user interface of AI products'],
+        correct: 1,
+        explanation: 'Contributors provide the human signal (ratings, annotations, evaluations) that teaches models how to behave. This is fundamentally different from engineering or product roles.'
+      },
+      {
+        id: 'q2',
+        question: 'What does inter-rater reliability measure?',
+        options: ['How fast contributors complete tasks', 'How much contributors are paid per task', 'How consistently multiple reviewers apply the same standards to the same content', 'The number of tasks available on a platform'],
+        correct: 2,
+        explanation: 'Inter-rater reliability (IRR) measures agreement between reviewers. High IRR means the team is applying rubrics consistently — which is critical for producing clean training data.'
+      },
+      {
+        id: 'q3',
+        question: 'Why does contributor quality directly affect model performance?',
+        options: ['Because contributors choose which model architecture to use', 'Because the data contributors generate is what the model learns from', 'Because contributors set the model\'s temperature and parameters', 'Because contributors write the system prompts for deployed models'],
+        correct: 1,
+        explanation: 'The model learns from the data contributors produce. If that data is inconsistent, poorly calibrated, or low quality, the model will reflect those flaws in its outputs.'
+      }
     ]
   },
   {
@@ -1031,14 +1028,38 @@ let courses = [
     thumb: 't2',
     status: 'live',
     lessons: [
-      { id: 'l1', title: 'Welcome & What You\'ll Learn', type: 'video', videoUrl: '', content: 'This course covers how to apply evaluation rubrics, identify quality dimensions, and maintain consistency at volume — the core skills of a working AI evaluator.', keyPoints: ['Rubric application is a learnable skill', 'Consistency at volume is what separates good from great evaluators', 'This course mirrors real evaluation environments'] },
-      { id: 'l2', title: 'How Rubrics Are Applied', type: 'video', videoUrl: '', content: 'A rubric is a structured framework that defines what a good response looks like. Learning to apply rubrics consistently is the most important skill an evaluator can develop.', keyPoints: ['Rubrics have dimensions: helpfulness, accuracy, safety, format', 'Each dimension is scored independently', 'Anchors (examples) calibrate your interpretation of the scale'] },
-      { id: 'l3', title: 'Common Quality Dimensions', type: 'video', videoUrl: '', content: 'Most evaluation rubrics share a common set of quality dimensions. Understanding these deeply lets you evaluate across different programs without starting from scratch.', keyPoints: ['Helpfulness: did the response actually address the request?', 'Accuracy: is the information correct?', 'Safety: does the response avoid harmful outputs?', 'Format: is the structure appropriate for the task?'] },
-      { id: 'l4', title: 'Knowledge Check', type: 'quiz', videoUrl: '', content: '', keyPoints: [] }
+      {
+        id: 'l1', title: 'Welcome & What You\'ll Learn', type: 'video',
+        videoUrl: '', content: 'This course covers how to apply evaluation rubrics, identify quality dimensions, and maintain consistency at volume — the core skills of a working AI evaluator.', keyPoints: ['Rubric application is a learnable skill', 'Consistency at volume is what separates good from great evaluators', 'This course mirrors real evaluation environments']
+      },
+      {
+        id: 'l2', title: 'How Rubrics Are Applied', type: 'video',
+        videoUrl: '', content: 'A rubric is a structured framework that defines what a good response looks like. Learning to apply rubrics consistently is the most important skill an evaluator can develop.', keyPoints: ['Rubrics have dimensions: helpfulness, accuracy, safety, format', 'Each dimension is scored independently', 'Anchors (examples) calibrate your interpretation of the scale']
+      },
+      {
+        id: 'l3', title: 'Common Quality Dimensions', type: 'video',
+        videoUrl: '', content: 'Most evaluation rubrics share a common set of quality dimensions. Understanding these deeply lets you evaluate across different programs without starting from scratch.', keyPoints: ['Helpfulness: did the response actually address the request?', 'Accuracy: is the information correct?', 'Safety: does the response avoid harmful outputs?', 'Format: is the structure appropriate for the task?']
+      },
+      {
+        id: 'l4', title: 'Knowledge Check', type: 'quiz',
+        videoUrl: '', content: '', keyPoints: []
+      }
     ],
     quizzes: [
-      { id: 'q1', question: 'What is the purpose of "anchor examples" in an evaluation rubric?', options: ['To show evaluators which responses to copy', 'To calibrate how evaluators interpret each point on the rating scale', 'To define the word count limit for responses', 'To demonstrate the style of the AI model being trained'], correct: 1, explanation: 'Anchor examples show evaluators what a "3" looks like versus a "4" or "5" on a scale. They reduce subjective interpretation and improve consistency across the reviewer team.' },
-      { id: 'q2', question: 'A response is factually accurate but completely ignores the user\'s actual question. How should this be scored?', options: ['High — accuracy is the most important dimension', 'High — if the facts are right, the response is good', 'Low on helpfulness — accuracy alone doesn\'t make a response good', 'It depends on the formatting'], correct: 2, explanation: 'Helpfulness and accuracy are separate dimensions. A response can be accurate but unhelpful if it fails to address the actual request. A good evaluator scores each dimension independently.' }
+      {
+        id: 'q1',
+        question: 'What is the purpose of "anchor examples" in an evaluation rubric?',
+        options: ['To show evaluators which responses to copy', 'To calibrate how evaluators interpret each point on the rating scale', 'To define the word count limit for responses', 'To demonstrate the style of the AI model being trained'],
+        correct: 1,
+        explanation: 'Anchor examples show evaluators what a "3" looks like versus a "4" or "5" on a scale. They reduce subjective interpretation and improve consistency across the reviewer team.'
+      },
+      {
+        id: 'q2',
+        question: 'A response is factually accurate but completely ignores the user\'s actual question. How should this be scored?',
+        options: ['High — accuracy is the most important dimension', 'High — if the facts are right, the response is good', 'Low on helpfulness — accuracy alone doesn\'t make a response good', 'It depends on the formatting'],
+        correct: 2,
+        explanation: 'Helpfulness and accuracy are separate dimensions. A response can be accurate but unhelpful if it fails to address the actual request. A good evaluator scores each dimension independently.'
+      }
     ]
   },
   {
@@ -1050,20 +1071,51 @@ let courses = [
     thumb: 't3',
     status: 'live',
     lessons: [
-      { id: 'l1', title: 'The Reviewer Role', type: 'video', videoUrl: '', content: 'Reviewers sit above contributors in the quality hierarchy. Their job is to audit contributor work, maintain calibration, and escalate edge cases.', keyPoints: ['Reviewers are responsible for data quality at scale', 'The reviewer role requires both domain knowledge and judgment', 'Escalation is a skill — knowing when to flag vs. resolve is critical'] },
-      { id: 'l2', title: 'Edge Case Identification', type: 'video', videoUrl: '', content: 'Edge cases are the scenarios that don\'t fit neatly into the rubric. Identifying them accurately and escalating them properly protects both the data pipeline and the model.', keyPoints: ['Edge cases challenge rubric boundaries', 'Not every edge case needs escalation — judgment matters', 'Clear documentation of edge case decisions builds institutional knowledge'] },
-      { id: 'l3', title: 'Calibration & IRR', type: 'video', videoUrl: '', content: 'Calibration is the ongoing process of aligning reviewers to shared standards. Inter-rater reliability (IRR) is how you measure whether that alignment is working.', keyPoints: ['Calibration sessions use agreed-upon examples to anchor the team', 'IRR is measured with metrics like Cohen\'s Kappa or percent agreement', 'Low IRR is a signal that the rubric — not the reviewers — may need revision'] },
-      { id: 'l4', title: 'Quality Benchmarking', type: 'video', videoUrl: '', content: 'Quality benchmarking is how organizations set and maintain performance standards for their contributor teams.', keyPoints: ['Benchmarks define the minimum acceptable quality threshold', 'Benchmarks are set using gold-standard data', 'Regular benchmarking catches quality drift before it affects model training'] },
-      { id: 'l5', title: 'Knowledge Check', type: 'quiz', videoUrl: '', content: '', keyPoints: [] },
-      { id: 'l6', title: 'Practice Tasks', type: 'practice', videoUrl: '', content: 'Apply everything you have learned by evaluating real AI responses. Rate each response across four dimensions and provide your written rationale. Your evaluations are saved and contribute to real training data.', keyPoints: ['Take your time — quality over speed', 'Rate each dimension independently', 'Your rationale is the most valuable part'] }
+      {
+        id: 'l1', title: 'The Reviewer Role', type: 'video',
+        videoUrl: '', content: 'Reviewers sit above contributors in the quality hierarchy. Their job is to audit contributor work, maintain calibration, and escalate edge cases.', keyPoints: ['Reviewers are responsible for data quality at scale', 'The reviewer role requires both domain knowledge and judgment', 'Escalation is a skill — knowing when to flag vs. resolve is critical']
+      },
+      {
+        id: 'l2', title: 'Edge Case Identification', type: 'video',
+        videoUrl: '', content: 'Edge cases are the scenarios that don\'t fit neatly into the rubric. Identifying them accurately and escalating them properly protects both the data pipeline and the model.', keyPoints: ['Edge cases challenge rubric boundaries', 'Not every edge case needs escalation — judgment matters', 'Clear documentation of edge case decisions builds institutional knowledge']
+      },
+      {
+        id: 'l3', title: 'Calibration & IRR', type: 'video',
+        videoUrl: '', content: 'Calibration is the ongoing process of aligning reviewers to shared standards. Inter-rater reliability (IRR) is how you measure whether that alignment is working.', keyPoints: ['Calibration sessions use agreed-upon examples to anchor the team', 'IRR is measured with metrics like Cohen\'s Kappa or percent agreement', 'Low IRR is a signal that the rubric — not the reviewers — may need revision']
+      },
+      {
+        id: 'l4', title: 'Quality Benchmarking', type: 'video',
+        videoUrl: '', content: 'Quality benchmarking is how organizations set and maintain performance standards for their contributor teams.', keyPoints: ['Benchmarks define the minimum acceptable quality threshold', 'Benchmarks are set using gold-standard data', 'Regular benchmarking catches quality drift before it affects model training']
+      },
+      {
+        id: 'l5', title: 'Knowledge Check', type: 'quiz',
+        videoUrl: '', content: '', keyPoints: []
+      },
+      {
+        id: 'l6', title: 'Practice Tasks', type: 'practice',
+        videoUrl: '', content: 'Apply everything you have learned by evaluating real AI responses. Rate each response across four dimensions and provide your written rationale. Your evaluations are saved and contribute to real training data.', keyPoints: ['Take your time — quality over speed', 'Rate each dimension independently', 'Your rationale is the most valuable part']
+      }
     ],
     quizzes: [
-      { id: 'q1', question: 'What is the most appropriate action when a reviewer encounters a task that doesn\'t fit any rubric category?', options: ['Score it using the closest category and move on', 'Skip the task entirely', 'Escalate it with documentation explaining why it falls outside the rubric', 'Ask another contributor to complete it instead'], correct: 2, explanation: 'Edge cases that fall outside rubric boundaries should be escalated with clear documentation. This protects the data pipeline and helps the organization improve the rubric over time.' },
-      { id: 'q2', question: 'What does a low inter-rater reliability score most likely indicate?', options: ['Contributors are working too slowly', 'The rubric is unclear or insufficiently calibrated', 'The model is performing poorly', 'There are too many tasks in the queue'], correct: 1, explanation: 'Low IRR typically indicates a rubric or calibration problem, not a people problem. When reviewers consistently disagree, it usually means the rubric needs better anchors or clearer definitions.' }
+      {
+        id: 'q1',
+        question: 'What is the most appropriate action when a reviewer encounters a task that doesn\'t fit any rubric category?',
+        options: ['Score it using the closest category and move on', 'Skip the task entirely', 'Escalate it with documentation explaining why it falls outside the rubric', 'Ask another contributor to complete it instead'],
+        correct: 2,
+        explanation: 'Edge cases that fall outside rubric boundaries should be escalated with clear documentation. This protects the data pipeline and helps the organization improve the rubric over time.'
+      },
+      {
+        id: 'q2',
+        question: 'What does a low inter-rater reliability score most likely indicate?',
+        options: ['Contributors are working too slowly', 'The rubric is unclear or insufficiently calibrated', 'The model is performing poorly', 'There are too many tasks in the queue'],
+        correct: 1,
+        explanation: 'Low IRR typically indicates a rubric or calibration problem, not a people problem. When reviewers consistently disagree, it usually means the rubric needs better anchors or clearer definitions.'
+      }
     ]
   }
 ];
 
+// ── Demo course (only visible in demo mode) ──
 const demoCourse = {
   id: 'course-demo',
   title: 'AI Contributor Training — Sample Module',
@@ -1074,44 +1126,78 @@ const demoCourse = {
   status: 'live',
   isDemo: true,
   lessons: [
-    { id: 'ld1', title: 'What Is RLHF and Why It Depends on You', type: 'video', videoUrl: '', content: 'Reinforcement Learning from Human Feedback (RLHF) is the process by which large language models learn to produce better, safer, and more helpful responses — using human judgment as the training signal. This lesson explains what that means in practice, and why the quality of contributor work directly determines the quality of the model.', keyPoints: ['RLHF uses human ratings and comparisons to fine-tune model behavior', 'Contributors are not just data entry workers — they are the quality signal', 'A poorly calibrated reviewer produces noisy data that degrades model performance', 'Structured training is what separates high-performing contributor teams from high-churn ones'] },
-    { id: 'ld2', title: 'Evaluating Written Responses: What Good Looks Like', type: 'video', videoUrl: '', content: 'Written response evaluation is one of the most common — and most misunderstood — contributor tasks. This lesson breaks down how to assess a model response across the dimensions that matter: helpfulness, accuracy, clarity, and appropriate tone. We use real example prompts and responses to show how experienced evaluators think through their ratings.', keyPoints: ['Helpfulness: did the response actually address what was asked?', 'Accuracy: is every factual claim in the response correct?', 'Clarity: is the response easy to understand without being over-simplified?', 'Tone: is the register appropriate for the context — professional, conversational, technical?', 'A response can pass on three dimensions and fail on one — each is scored independently'] },
-    { id: 'ld3', title: 'Knowledge Check', type: 'quiz', videoUrl: '', content: '', keyPoints: [] }
+    {
+      id: 'ld1',
+      title: 'What Is RLHF and Why It Depends on You',
+      type: 'video',
+      videoUrl: '',
+      content: 'Reinforcement Learning from Human Feedback (RLHF) is the process by which large language models learn to produce better, safer, and more helpful responses — using human judgment as the training signal. This lesson explains what that means in practice, and why the quality of contributor work directly determines the quality of the model.',
+      keyPoints: [
+        'RLHF uses human ratings and comparisons to fine-tune model behavior',
+        'Contributors are not just data entry workers — they are the quality signal',
+        'A poorly calibrated reviewer produces noisy data that degrades model performance',
+        'Structured training is what separates high-performing contributor teams from high-churn ones'
+      ]
+    },
+    {
+      id: 'ld2',
+      title: 'Evaluating Written Responses: What Good Looks Like',
+      type: 'video',
+      videoUrl: '',
+      content: 'Written response evaluation is one of the most common — and most misunderstood — contributor tasks. This lesson breaks down how to assess a model response across the dimensions that matter: helpfulness, accuracy, clarity, and appropriate tone. We use real example prompts and responses to show how experienced evaluators think through their ratings.',
+      keyPoints: [
+        'Helpfulness: did the response actually address what was asked?',
+        'Accuracy: is every factual claim in the response correct?',
+        'Clarity: is the response easy to understand without being over-simplified?',
+        'Tone: is the register appropriate for the context — professional, conversational, technical?',
+        'A response can pass on three dimensions and fail on one — each is scored independently'
+      ]
+    },
+    {
+      id: 'ld3',
+      title: 'Knowledge Check',
+      type: 'quiz',
+      videoUrl: '',
+      content: '',
+      keyPoints: []
+    }
   ],
   quizzes: [
-    { id: 'qd1', question: 'A model response answers the user\'s question accurately, but uses a highly technical tone when the user clearly asked for a simple explanation. How should this be rated?', options: ['High — it answered the question correctly', 'High on accuracy, lower on helpfulness and tone — each dimension scored separately', 'Low across all dimensions — tone errors invalidate the response', 'It cannot be rated without more information'], correct: 1, explanation: 'Each evaluation dimension is scored independently. A response can be factually correct but still fail on helpfulness or tone. A good evaluator recognizes this and scores accordingly — not averaging across all dimensions, but assessing each one on its own merits.' },
-    { id: 'qd2', question: 'Why does RLHF quality depend so directly on contributor training?', options: ['Because contributors write the code used to train the model', 'Because the human ratings contributors produce are the direct signal used to shape model behavior', 'Because contributors choose which model architecture to use', 'Because poorly trained contributors slow down the annotation pipeline'], correct: 1, explanation: 'In RLHF, the model learns from human preference signals — the ratings, comparisons, and evaluations contributors produce. If those signals are inconsistent or poorly calibrated, the model learns from noise. Structured contributor training directly improves model quality at the source.' }
+    {
+      id: 'qd1',
+      question: 'A model response answers the user\'s question accurately, but uses a highly technical tone when the user clearly asked for a simple explanation. How should this be rated?',
+      options: [
+        'High — it answered the question correctly',
+        'High on accuracy, lower on helpfulness and tone — each dimension scored separately',
+        'Low across all dimensions — tone errors invalidate the response',
+        'It cannot be rated without more information'
+      ],
+      correct: 1,
+      explanation: 'Each evaluation dimension is scored independently. A response can be factually correct but still fail on helpfulness or tone. A good evaluator recognizes this and scores accordingly — not averaging across all dimensions, but assessing each one on its own merits.'
+    },
+    {
+      id: 'qd2',
+      question: 'Why does RLHF quality depend so directly on contributor training?',
+      options: [
+        'Because contributors write the code used to train the model',
+        'Because the human ratings contributors produce are the direct signal used to shape model behavior',
+        'Because contributors choose which model architecture to use',
+        'Because poorly trained contributors slow down the annotation pipeline'
+      ],
+      correct: 1,
+      explanation: 'In RLHF, the model learns from human preference signals — the ratings, comparisons, and evaluations contributors produce. If those signals are inconsistent or poorly calibrated, the model learns from noise. Structured contributor training directly improves model quality at the source.'
+    }
   ]
 };
 
-// Leaderboard populated from Supabase — no fake data
-let leaderboard = [];
-
-// ── Load real leaderboard from Supabase ──
-async function loadLeaderboard() {
-  try {
-    const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level').order('xp', { ascending: false }).limit(20);
-    const { data: profiles } = await _supabase.from('profiles').select('id, full_name, email');
-    const profileMap = {};
-    (profiles || []).forEach(p => { profileMap[p.id] = p; });
-    const avatarColors = ['#00e5c8','#9b5de5','#f5c842','#ff6b9d','#00d4ff'];
-    leaderboard = (xpData || []).map((x, i) => {
-      const profile = profileMap[x.user_id];
-      const name = profile?.full_name || (profile?.email ? profile.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() : 'Learner');
-      const isYou = appState.user && appState.user.supabaseId === x.user_id;
-      return { name, xp: x.xp, level: x.level, avatar: name.slice(0,2).toUpperCase(), color: avatarColors[i % avatarColors.length], isYou };
-    });
-    // Ensure current user appears even if outside top 20
-    if (appState.user && appState.user.supabaseId && !leaderboard.find(l => l.isYou)) {
-      leaderboard.push({ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
-    }
-  } catch(e) {
-    console.warn('Leaderboard load failed', e);
-    if (appState.user) {
-      leaderboard = [{ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true }];
-    }
-  }
-}
+// Mock leaderboard data
+let leaderboard = [
+  { name: 'Alex M.', xp: 2840, level: 8, avatar: 'AM', color: '#00e5c8' },
+  { name: 'Jordan R.', xp: 2210, level: 7, avatar: 'JR', color: '#9b5de5' },
+  { name: 'Sam T.', xp: 1950, level: 6, avatar: 'ST', color: '#f5c842' },
+  { name: 'Casey L.', xp: 1740, level: 5, avatar: 'CL', color: '#00e5c8' },
+  { name: 'Morgan P.', xp: 1320, level: 4, avatar: 'MP', color: '#9b5de5' },
+];
 
 const allBadges = [
   { id: 'first-lesson', icon: '🎬', name: 'First Lesson', desc: 'Complete your first lesson', xpReq: 0, lessonReq: 1 },
@@ -1151,8 +1237,11 @@ async function handleLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass = document.getElementById('login-pass').value;
   if (!email || !pass) { showAuthError('login-error','Please enter email and password.'); return; }
+  // Check for demo credentials
   if (email === DEMO_EMAIL && pass === DEMO_PASS) { handleDemoLogin(); return; }
+  // Check for any authorized admin email
   if (ADMIN_EMAILS.includes(email.toLowerCase()) && pass === ADMIN_PASS) { handleAdminLogin(email); return; }
+  // Real Supabase auth
   const btn = document.querySelector('#view-auth .tab-content.active .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
   try {
@@ -1176,15 +1265,17 @@ async function handleLogin() {
 // ════════════════════════════════
 async function loadSupabaseProfile(uid, name, email) {
   try {
+    // Load or create XP record
     let { data: xpData } = await _supabase.from('user_xp').select('*').eq('user_id', uid).single();
     if (!xpData) {
       await _supabase.from('user_xp').insert({ user_id: uid, xp: 0, level: 1, streak: 1, last_active: new Date().toISOString() });
       xpData = { xp: 0, level: 1, streak: 1 };
     }
+    // Load completed lessons
     const { data: progressData } = await _supabase.from('course_progress').select('course_id,lesson_id').eq('user_id', uid).eq('completed', true);
     const lessonsCompleted = (progressData || []).map(r => r.course_id + '-' + r.lesson_id);
-    // ── CHANGE: also save full_name to profiles on every login ──
-    await _supabase.from('profiles').upsert({ id: uid, email, full_name: name, role: 'student' });
+    // Ensure profile exists
+    await _supabase.from('profiles').upsert({ id: uid, email, role: 'student' });
     return {
       name, email,
       supabaseId: uid,
@@ -1223,7 +1314,9 @@ async function saveXPToSupabase() {
   } catch(e) { console.warn('XP save failed', e); }
 }
 
-function handleDemoQuickLogin() { handleDemoLogin(); }
+function handleDemoQuickLogin() {
+  handleDemoLogin();
+}
 
 function handleDemoLogin() {
   appState.isDemo = true;
@@ -1231,6 +1324,7 @@ function handleDemoLogin() {
   appState.user = { name: 'Demo Guest', email: DEMO_EMAIL, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1 };
   try { localStorage.setItem('lcai_session_type', 'demo'); } catch(e) {}
   if (!courses.find(c => c.id === 'course-demo')) courses.push(demoCourse);
+  // Show intro overlay first, then reveal the app
   const overlay = document.getElementById('demo-intro-overlay');
   if (overlay) overlay.style.display = 'flex';
   showDemoIntro(() => {
@@ -1260,12 +1354,13 @@ async function handleRegister() {
       return;
     }
     if (data.user && !data.session) {
+      // Email confirmation required
       showAuthError('reg-error', '✅ Check your email to confirm your account, then sign in.');
       if (btn) { btn.disabled = false; btn.innerHTML = 'Create Account <span class="arrow">→</span>'; }
       return;
     }
-    // ── CHANGE: save full_name on registration too ──
-    await _supabase.from('profiles').upsert({ id: data.user.id, email, full_name: name, role: 'student' });
+    // Auto-confirmed — create profile and log in
+    await _supabase.from('profiles').upsert({ id: data.user.id, email, role: 'student' });
     loginUser({ name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1, supabaseId: data.user.id });
   } catch(e) {
     showAuthError('reg-error', 'Something went wrong. Please try again.');
@@ -1274,9 +1369,11 @@ async function handleRegister() {
 }
 
 function handleDemoAdminView() {
+  // Show read-only admin panel for demo users
   appState.isAdmin = true;
   showView('view-admin');
   renderAdminCourses();
+  // Add a back button for demo users
   setTimeout(() => {
     const existing = document.getElementById('demo-back-btn');
     if (!existing) {
@@ -1304,6 +1401,7 @@ function handleAdminLogin(email) {
   const name = resolvedEmail === ADMIN_EMAIL ? 'Admin' : capitalize(resolvedEmail.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim());
   appState.user = { name, email: resolvedEmail };
   try { localStorage.setItem('lcai_session_type', 'admin'); localStorage.setItem('lcai_session_email', resolvedEmail); } catch(e) {}
+  // Ensure admin tabs are injected before rendering
   ensureAdminTabs();
   showView('view-admin');
   renderAdminCourses();
@@ -1322,10 +1420,11 @@ function ensureAdminTabs() {
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
 
-async function loginUser(user) {
+function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
-  await loadLeaderboard();
+  // Add user to leaderboard
+  leaderboard.push({ name: user.name, xp: user.xp, level: user.level, avatar: user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
   showView('view-app');
   renderApp();
   navigateAfterLogin();
@@ -1336,7 +1435,6 @@ function handleLogout() {
   appState.user = null;
   appState.isAdmin = false;
   appState.isDemo = false;
-  leaderboard = [];
   try {
     localStorage.removeItem('lcai_session_type');
     localStorage.removeItem('lcai_session_email');
@@ -1372,6 +1470,7 @@ function showView(id) {
 function navTo(page) {
   const VALID_NAV = ['dashboard','my-courses','leaderboard','achievements'];
   if (!VALID_NAV.includes(page)) page = 'dashboard';
+  // Save current page for refresh restore
   try { localStorage.setItem('lcai_last_page', page); } catch(e) {}
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === page));
   VALID_NAV.forEach(p => {
@@ -1387,13 +1486,17 @@ function navTo(page) {
   if (page === 'my-courses') renderMyCourses();
   initFadeIns();
   window.scrollTo({top:0,behavior:'instant'});
-  if (appState.user) history.pushState(null, '', '#' + page);
+  // Update hash only when logged in
+  if (appState.user) {
+    history.pushState(null, '', '#' + page);
+  }
 }
 
+// ── HASH ROUTING ──
 const VALID_NAV_PAGES = ['dashboard','my-courses','leaderboard','achievements'];
 
 function loadFromHash() {
-  if (!appState.user) return;
+  if (!appState.user) return; // don't route if not logged in
   const hash = window.location.hash.replace('#','').trim();
   const page = VALID_NAV_PAGES.includes(hash) ? hash : 'dashboard';
   navTo(page);
@@ -1401,17 +1504,19 @@ function loadFromHash() {
 
 window.addEventListener('hashchange', loadFromHash);
 
+// After login, check hash to land on right page
 function navigateAfterLogin() {
   const hash = window.location.hash.replace('#','').trim();
   const page = VALID_NAV_PAGES.includes(hash) ? hash : 'dashboard';
   navTo(page);
 }
-
 function renderApp() {
   const u = appState.user;
+  // Sidebar
   document.getElementById('sidebar-avatar').textContent = u.name.slice(0,2).toUpperCase();
   document.getElementById('sidebar-name').textContent = u.name;
   document.getElementById('topbar-avatar').textContent = u.name.slice(0,2).toUpperCase();
+  // Demo mode UI
   const demoBanner = document.getElementById('demo-banner');
   const demoAdminLink = document.getElementById('demo-admin-link');
   if (demoBanner) demoBanner.style.display = appState.isDemo ? 'flex' : 'none';
@@ -1437,12 +1542,15 @@ function updateXPBar() {
   document.getElementById('stat-lessons').textContent = u.lessonsCompleted.length;
   document.getElementById('stat-badges').textContent = u.badges.length;
   document.getElementById('welcome-name').textContent = u.name.split(' ')[0];
+  // Completion %
   const totalLessons = courses.reduce((a,c)=>a+c.lessons.filter(l=>l.type!=='quiz').length,0);
   const pct = totalLessons ? Math.round((u.lessonsCompleted.length/totalLessons)*100) : 0;
   document.getElementById('ws-complete').textContent = pct+'%';
+  // Rank
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp);
   const rank = sorted.findIndex(l=>l.isYou)+1;
   document.getElementById('stat-rank').textContent = rank > 0 ? '#'+rank : '#—';
+  // Update leaderboard entry
   const myEntry = leaderboard.find(l=>l.isYou);
   if (myEntry) { myEntry.xp = u.xp; myEntry.level = u.level; }
 }
@@ -1475,7 +1583,9 @@ function renderCourseCards(containerId) {
   `).join('');
 }
 
-function renderMyCourses() { renderCourseCards('my-courses-grid'); }
+function renderMyCourses() {
+  renderCourseCards('my-courses-grid');
+}
 
 function getCourseProgress(courseId) {
   const u = appState.user;
@@ -1502,28 +1612,19 @@ function renderBadges(containerId, limited=false) {
   }).join('');
 }
 
-function renderAllBadges() { renderBadges('all-badges', false); }
-
-// ── CHANGE: formatLeaderboardName — first name + last initial for student-facing leaderboards ──
-function formatLeaderboardName(name) {
-  const parts = (name || '').trim().split(' ');
-  if (parts.length === 1) return parts[0];
-  return parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.';
+function renderAllBadges() {
+  renderBadges('all-badges', false);
 }
 
 function renderLeaderboardMini() {
   const container = document.getElementById('dashboard-lb');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp).slice(0,5);
-  if (!sorted.length) {
-    container.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners yet — be the first on the board!</div>';
-    return;
-  }
   container.innerHTML = sorted.map((l,i) => `
     <div class="lb-row ${l.isYou?'you':''}">
       <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
       <div class="lb-avatar" style="background:${l.color};color:#080b10;">${l.avatar}</div>
-      <div class="lb-name">${formatLeaderboardName(l.name)}${l.isYou?' (You)':''}</div>
+      <div class="lb-name">${l.name}${l.isYou?' (You)':''}</div>
       <div class="lb-xp">${l.xp} XP</div>
     </div>
   `).join('');
@@ -1533,10 +1634,6 @@ function renderLeaderboardFull() {
   const container = document.getElementById('lb-full-list');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp);
-  if (!sorted.length) {
-    container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners on the leaderboard yet. Complete lessons to earn XP and appear here!</div>';
-    return;
-  }
   container.innerHTML = `
     <div class="lb-full-row header">
       <div>Rank</div><div></div><div>Name</div><div>Level</div><div>XP</div>
@@ -1545,7 +1642,7 @@ function renderLeaderboardFull() {
     <div class="lb-full-row ${l.isYou?'you':''}">
       <div class="lb-medal">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
       <div class="lb-avatar" style="background:${l.color};color:#080b10;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.72rem;">${l.avatar}</div>
-      <div>${formatLeaderboardName(l.name)}${l.isYou?' <span style="color:var(--cyan);font-size:0.75rem;">(You)</span>':''}</div>
+      <div>${l.name}${l.isYou?' <span style="color:var(--cyan);font-size:0.75rem;">(You)</span>':''}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--violet);">Lv ${l.level||1}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--cyan);">${l.xp}</div>
     </div>
@@ -1603,8 +1700,11 @@ function loadLesson(idx) {
   const lesson = course.lessons[idx];
   if (!lesson) return;
   appState.currentLessonIdx = idx;
+
+  // Update sidebar
   document.querySelectorAll('.lesson-item').forEach((el,i) => el.classList.toggle('active', i===idx));
   document.getElementById('player-lesson-title').textContent = lesson.title;
+
   const body = document.getElementById('player-body');
 
   if (lesson.type === 'quiz') {
@@ -1634,9 +1734,11 @@ function loadLesson(idx) {
           <p style="font-size:0.8rem;margin-top:0.25rem;">This video lesson is on its way.</p>
         </div></div>`;
     }
+
     const keyPtsHtml = lesson.keyPoints.length ? lesson.keyPoints.map(kp =>
       `<div class="key-point"><span class="key-point-icon">→</span><span class="key-point-text">${kp}</span></div>`
     ).join('') : '';
+
     body.innerHTML = `
       <div class="player-meta">
         <div class="meta-chip"><span>⚡</span><span class="chip-val">+50 XP</span><span>on completion</span></div>
@@ -1659,65 +1761,107 @@ function getDemoHeroImage(lessonId) {
     'ld1': `
       <svg width="100%" height="100%" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;">
         <defs>
-          <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#080b10"/><stop offset="100%" stop-color="#0d1220"/></linearGradient>
-          <linearGradient id="cg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00e5c8"/><stop offset="100%" stop-color="#9b5de5"/></linearGradient>
-          <linearGradient id="pulse1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#00e5c8" stop-opacity="0"/><stop offset="50%" stop-color="#00e5c8" stop-opacity="0.8"/><stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/></linearGradient>
+          <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#080b10"/>
+            <stop offset="100%" stop-color="#0d1220"/>
+          </linearGradient>
+          <linearGradient id="cg1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00e5c8"/>
+            <stop offset="100%" stop-color="#9b5de5"/>
+          </linearGradient>
+          <linearGradient id="pulse1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#00e5c8" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#00e5c8" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#9b5de5" stop-opacity="0"/>
+          </linearGradient>
           <filter id="glow1"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
+        <!-- bg -->
         <rect width="800" height="420" fill="url(#bg1)"/>
+        <!-- grid lines -->
         <line x1="0" y1="100" x2="800" y2="100" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
         <line x1="0" y1="210" x2="800" y2="210" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
         <line x1="0" y1="320" x2="800" y2="320" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
         <line x1="200" y1="0" x2="200" y2="420" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
         <line x1="400" y1="0" x2="400" y2="420" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
         <line x1="600" y1="0" x2="600" y2="420" stroke="#00e5c8" stroke-width="0.3" stroke-opacity="0.12"/>
+
+        <!-- Human nodes -->
         <circle cx="160" cy="210" r="32" fill="none" stroke="#00e5c8" stroke-width="1.5" stroke-opacity="0.5"/>
         <circle cx="160" cy="210" r="24" fill="rgba(0,229,200,0.08)"/>
         <text x="160" y="215" text-anchor="middle" font-size="18" fill="#00e5c8">👤</text>
+
         <circle cx="160" cy="330" r="32" fill="none" stroke="#00e5c8" stroke-width="1.5" stroke-opacity="0.5"/>
         <circle cx="160" cy="330" r="24" fill="rgba(0,229,200,0.08)"/>
         <text x="160" y="335" text-anchor="middle" font-size="18" fill="#00e5c8">👤</text>
+
         <circle cx="160" cy="90" r="32" fill="none" stroke="#00e5c8" stroke-width="1.5" stroke-opacity="0.5"/>
         <circle cx="160" cy="90" r="24" fill="rgba(0,229,200,0.08)"/>
         <text x="160" y="95" text-anchor="middle" font-size="18" fill="#00e5c8">👤</text>
+
+        <!-- Arrows to model -->
         <line x1="194" y1="100" x2="310" y2="175" stroke="url(#pulse1)" stroke-width="1.5"/>
         <line x1="194" y1="210" x2="310" y2="210" stroke="url(#pulse1)" stroke-width="1.5"/>
         <line x1="194" y1="320" x2="310" y2="245" stroke="url(#pulse1)" stroke-width="1.5"/>
+        <!-- arrowheads -->
         <polygon points="310,175 300,170 303,180" fill="#00e5c8" opacity="0.7"/>
         <polygon points="310,210 300,205 300,215" fill="#00e5c8" opacity="0.7"/>
         <polygon points="310,245 300,240 303,250" fill="#00e5c8" opacity="0.7"/>
+
+        <!-- Central brain/model -->
         <circle cx="400" cy="210" r="64" fill="none" stroke="url(#cg1)" stroke-width="2"/>
         <circle cx="400" cy="210" r="52" fill="rgba(155,93,229,0.07)"/>
         <circle cx="400" cy="210" r="38" fill="rgba(0,229,200,0.05)"/>
         <text x="400" y="220" text-anchor="middle" font-size="36" fill="url(#cg1)" filter="url(#glow1)">🧠</text>
-        <text x="400" y="293" text-anchor="middle" font-size="9" fill="#9b5de5" font-family="DM Sans,sans-serif" letter-spacing="0.15em">LANGUAGE MODEL</text>
+        <text x="400" y="293" text-anchor="middle" font-size="9" fill="#9b5de5" font-family="DM Sans,sans-serif" letter-spacing="0.15em" text-transform="uppercase">LANGUAGE MODEL</text>
+
+        <!-- Output arrow -->
         <line x1="452" y1="210" x2="560" y2="210" stroke="url(#pulse1)" stroke-width="2"/>
         <polygon points="560,210 550,204 550,216" fill="#9b5de5" opacity="0.9"/>
+
+        <!-- Output box -->
         <rect x="568" y="170" width="170" height="80" rx="8" fill="rgba(155,93,229,0.1)" stroke="#9b5de5" stroke-width="1.2" stroke-opacity="0.5"/>
         <text x="653" y="200" text-anchor="middle" font-size="9" fill="#9b5de5" font-family="DM Sans,sans-serif" letter-spacing="0.12em">IMPROVED OUTPUT</text>
         <rect x="585" y="210" width="136" height="6" rx="3" fill="rgba(155,93,229,0.3)"/>
         <rect x="585" y="222" width="100" height="6" rx="3" fill="rgba(155,93,229,0.2)"/>
         <rect x="585" y="234" width="118" height="6" rx="3" fill="rgba(155,93,229,0.15)"/>
+
+        <!-- Label -->
         <text x="400" y="48" text-anchor="middle" font-size="13" fill="white" font-family="DM Sans,sans-serif" font-weight="700" opacity="0.9">Reinforcement Learning from Human Feedback</text>
         <text x="400" y="66" text-anchor="middle" font-size="10" fill="#00e5c8" font-family="DM Sans,sans-serif" opacity="0.7" letter-spacing="0.12em">HUMAN SIGNAL → MODEL IMPROVEMENT</text>
+
+        <!-- Feedback label -->
         <text x="120" y="195" text-anchor="middle" font-size="9" fill="#00e5c8" font-family="DM Sans,sans-serif" letter-spacing="0.1em">CONTRIBUTORS</text>
         <text x="120" y="207" text-anchor="middle" font-size="8" fill="#00e5c8" font-family="DM Sans,sans-serif" opacity="0.6">Rate & Rank</text>
       </svg>`,
+
     'ld2': `
       <svg width="100%" height="100%" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:100%;">
         <defs>
-          <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#080b10"/><stop offset="100%" stop-color="#0d1220"/></linearGradient>
+          <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#080b10"/>
+            <stop offset="100%" stop-color="#0d1220"/>
+          </linearGradient>
+          <linearGradient id="cg2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#00e5c8"/>
+            <stop offset="100%" stop-color="#9b5de5"/>
+          </linearGradient>
           <filter id="glow2"><feGaussianBlur stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
         <rect width="800" height="420" fill="url(#bg2)"/>
+
+        <!-- Rubric card: Helpfulness -->
         <rect x="50" y="60" width="155" height="110" rx="10" fill="rgba(0,229,200,0.07)" stroke="#00e5c8" stroke-width="1.2" stroke-opacity="0.5"/>
         <text x="128" y="88" text-anchor="middle" font-size="22">✅</text>
         <text x="128" y="110" text-anchor="middle" font-size="11" fill="#00e5c8" font-family="DM Sans,sans-serif" font-weight="700">Helpfulness</text>
         <text x="128" y="125" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.5)" font-family="DM Sans,sans-serif">Did it address</text>
         <text x="128" y="137" text-anchor="middle" font-size="8.5" fill="rgba(255,255,255,0.5)" font-family="DM Sans,sans-serif">what was asked?</text>
+        <!-- score bar -->
         <rect x="68" y="150" width="120" height="7" rx="3.5" fill="rgba(0,229,200,0.15)"/>
         <rect x="68" y="150" width="104" height="7" rx="3.5" fill="#00e5c8" opacity="0.8"/>
         <text x="178" y="160" font-size="8" fill="#00e5c8" font-family="DM Mono,monospace">87%</text>
+
+        <!-- Rubric card: Accuracy -->
         <rect x="225" y="60" width="155" height="110" rx="10" fill="rgba(155,93,229,0.07)" stroke="#9b5de5" stroke-width="1.2" stroke-opacity="0.5"/>
         <text x="303" y="88" text-anchor="middle" font-size="22">🎯</text>
         <text x="303" y="110" text-anchor="middle" font-size="11" fill="#9b5de5" font-family="DM Sans,sans-serif" font-weight="700">Accuracy</text>
@@ -1726,6 +1870,8 @@ function getDemoHeroImage(lessonId) {
         <rect x="243" y="150" width="120" height="7" rx="3.5" fill="rgba(155,93,229,0.15)"/>
         <rect x="243" y="150" width="72" height="7" rx="3.5" fill="#9b5de5" opacity="0.8"/>
         <text x="353" y="160" font-size="8" fill="#9b5de5" font-family="DM Mono,monospace">60%</text>
+
+        <!-- Rubric card: Clarity -->
         <rect x="400" y="60" width="155" height="110" rx="10" fill="rgba(0,229,200,0.05)" stroke="#00e5c8" stroke-width="1.2" stroke-opacity="0.35"/>
         <text x="478" y="88" text-anchor="middle" font-size="22">💡</text>
         <text x="478" y="110" text-anchor="middle" font-size="11" fill="#00e5c8" font-family="DM Sans,sans-serif" font-weight="700">Clarity</text>
@@ -1734,6 +1880,8 @@ function getDemoHeroImage(lessonId) {
         <rect x="418" y="150" width="120" height="7" rx="3.5" fill="rgba(0,229,200,0.15)"/>
         <rect x="418" y="150" width="96" height="7" rx="3.5" fill="#00e5c8" opacity="0.6"/>
         <text x="528" y="160" font-size="8" fill="#00e5c8" font-family="DM Mono,monospace">80%</text>
+
+        <!-- Rubric card: Tone -->
         <rect x="575" y="60" width="155" height="110" rx="10" fill="rgba(245,200,66,0.06)" stroke="#f5c842" stroke-width="1.2" stroke-opacity="0.4"/>
         <text x="653" y="88" text-anchor="middle" font-size="22">🎭</text>
         <text x="653" y="110" text-anchor="middle" font-size="11" fill="#f5c842" font-family="DM Sans,sans-serif" font-weight="700">Tone</text>
@@ -1742,15 +1890,21 @@ function getDemoHeroImage(lessonId) {
         <rect x="593" y="150" width="120" height="7" rx="3.5" fill="rgba(245,200,66,0.15)"/>
         <rect x="593" y="150" width="38" height="7" rx="3.5" fill="#f5c842" opacity="0.8"/>
         <text x="703" y="160" font-size="8" fill="#f5c842" font-family="DM Mono,monospace">32%</text>
+
+        <!-- Example response area -->
         <rect x="50" y="210" width="700" height="160" rx="10" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
         <text x="70" y="235" font-size="9" fill="rgba(255,255,255,0.35)" font-family="DM Sans,sans-serif" letter-spacing="0.12em">MODEL RESPONSE</text>
         <rect x="70" y="248" width="520" height="8" rx="4" fill="rgba(255,255,255,0.1)"/>
         <rect x="70" y="263" width="380" height="8" rx="4" fill="rgba(255,255,255,0.07)"/>
         <rect x="70" y="278" width="460" height="8" rx="4" fill="rgba(255,255,255,0.07)"/>
         <rect x="70" y="293" width="300" height="8" rx="4" fill="rgba(255,255,255,0.05)"/>
+
+        <!-- Fail indicator on Tone -->
         <rect x="590" y="248" width="130" height="26" rx="6" fill="rgba(255,107,107,0.1)" stroke="rgba(255,107,107,0.4)" stroke-width="1"/>
         <text x="655" y="265" text-anchor="middle" font-size="9" fill="#ff6b6b" font-family="DM Sans,sans-serif" font-weight="600">⚠ Tone mismatch</text>
+
         <text x="400" y="380" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)" font-family="DM Sans,sans-serif" font-style="italic">Each dimension is scored independently — a response can pass three and fail one</text>
+
         <text x="400" y="40" text-anchor="middle" font-size="13" fill="white" font-family="DM Sans,sans-serif" font-weight="700" opacity="0.9">Evaluating Written Responses</text>
         <text x="400" y="55" text-anchor="middle" font-size="9.5" fill="#00e5c8" font-family="DM Sans,sans-serif" letter-spacing="0.12em" opacity="0.7">WHAT GOOD LOOKS LIKE ACROSS FOUR DIMENSIONS</text>
       </svg>`
@@ -1760,12 +1914,16 @@ function getDemoHeroImage(lessonId) {
 
 function getEmbedHTML(url) {
   if (!url) return '';
+  // YouTube
   const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([^&\n?#]+)/);
   if (ytMatch) return `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
+  // Vimeo
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `<iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" allowfullscreen></iframe>`;
+  // Google Drive
   const driveMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
   if (driveMatch) return `<iframe src="https://drive.google.com/file/d/${driveMatch[1]}/preview" allowfullscreen></iframe>`;
+  // HeyGen / Synthesia / direct iframe
   return `<iframe src="${url}" allowfullscreen></iframe>`;
 }
 
@@ -1826,6 +1984,7 @@ function submitAnswer(qi) {
   const selected = selectedAnswers[qi];
   if (selected === undefined) return;
   appState.quizAnswered[qi] = true;
+
   const correct = selected === q.correct;
   document.querySelectorAll(`[id^="qo-${qi}-"]`).forEach((el,oi) => {
     if (oi === q.correct) el.classList.add('correct');
@@ -1835,6 +1994,7 @@ function submitAnswer(qi) {
   document.getElementById(`qbtn-${qi}`).disabled = true;
   document.getElementById(`qscore-${qi}`).textContent = correct ? '✓ Correct! +25 XP' : '✗ Incorrect — try again next time';
   document.getElementById(`qscore-${qi}`).style.color = correct ? 'var(--cyan)' : '#ff6b6b';
+
   if (correct) {
     addXP(25);
     appState.user.correctAnswers = (appState.user.correctAnswers||0) + 1;
@@ -1850,13 +2010,16 @@ function completeLesson(idx) {
   const lesson = course.lessons[idx];
   const key = course.id+'-'+lesson.id;
   const u = appState.user;
+
   if (!u.lessonsCompleted.includes(key)) {
     u.lessonsCompleted.push(key);
     saveProgressToSupabase(course.id, lesson.id);
     if (lesson.type !== 'quiz' && lesson.type !== 'practice') {
       addXP(50);
       spawnXPPop('+50 XP');
+      const lessonNum = u.lessonsCompleted.filter(k => k.startsWith(course.id)).length;
       showMilestoneBanner('⚡', `Lesson complete! +50 XP`);
+      // Progress milestones
       const videoLessons = course.lessons.filter(l => l.type !== 'quiz').length;
       const doneLessons = u.lessonsCompleted.filter(k => k.startsWith(course.id)).length;
       const pct = Math.round((doneLessons / videoLessons) * 100);
@@ -1868,6 +2031,8 @@ function completeLesson(idx) {
   }
   renderLessonList();
   updateXPBar();
+
+  // Check course complete
   const allDone = course.lessons.every(l => u.lessonsCompleted.includes(course.id+'-'+l.id));
   if (allDone) {
     showToast('success','🎓',`Course complete! Great work.`);
@@ -1879,13 +2044,25 @@ function completeLesson(idx) {
       setTimeout(() => showLevelUp('Course Complete! 🎓','You\'ve finished the full course. Outstanding work.'), 1000);
     }
   }
+
+  // Next lesson
   if (idx < course.lessons.length - 1) loadLesson(idx+1);
   else showToast('success','✓','You\'ve reached the end of this course!');
 }
 
-function prevLesson() { if (appState.currentLessonIdx > 0) loadLesson(appState.currentLessonIdx-1); }
-function nextLesson() { const max = appState.currentCourse.lessons.length-1; if (appState.currentLessonIdx < max) loadLesson(appState.currentLessonIdx+1); }
-function exitPlayer() { showView('view-app'); renderApp(); navTo('dashboard'); }
+function prevLesson() {
+  if (appState.currentLessonIdx > 0) loadLesson(appState.currentLessonIdx-1);
+}
+function nextLesson() {
+  const max = appState.currentCourse.lessons.length-1;
+  if (appState.currentLessonIdx < max) loadLesson(appState.currentLessonIdx+1);
+}
+
+function exitPlayer() {
+  showView('view-app');
+  renderApp();
+  navTo('dashboard');
+}
 
 // ════════════════════════════════
 // GAMIFICATION
@@ -1981,7 +2158,9 @@ function showLevelUp(title, desc) {
   document.getElementById('levelup-modal').classList.add('open');
 }
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
 
 // ════════════════════════════════
 // ADMIN
@@ -2000,6 +2179,7 @@ function adminNavTo(panel) {
   if (panel === 'submissions') renderAdminSubmissions();
 }
 
+// Inject tabs into admin on load (ensureAdminTabs also called on login)
 document.addEventListener('DOMContentLoaded', () => { ensureAdminTabs(); });
 
 function renderAdminCourses() {
@@ -2027,9 +2207,11 @@ function editCourse(id) {
   document.getElementById('b-desc').value = c.desc;
   document.getElementById('b-emoji').value = c.emoji;
   document.getElementById('b-thumb').value = c.thumb;
+  // Load lessons
   lessonCount = 0;
   document.getElementById('lesson-builder-list').innerHTML = '';
   c.lessons.forEach(l => addLesson(l));
+  // Load quizzes
   quizCount = 0;
   document.getElementById('quiz-builder-list').innerHTML = '';
   c.quizzes.forEach(q => addQuiz(q));
@@ -2079,8 +2261,14 @@ function addLesson(data={}) {
   container.appendChild(div);
 }
 
-function toggleLBI(idx) { document.getElementById(`lbi-body-${idx}`).classList.toggle('open'); }
-function removeLBI(idx) { document.getElementById(`lbi-${idx}`)?.remove(); }
+function toggleLBI(idx) {
+  const body = document.getElementById(`lbi-body-${idx}`);
+  body.classList.toggle('open');
+}
+
+function removeLBI(idx) {
+  document.getElementById(`lbi-${idx}`)?.remove();
+}
 
 function addQuiz(data={}) {
   const idx = quizCount++;
@@ -2119,7 +2307,8 @@ function publishCourse() {
   const title = document.getElementById('b-title').value.trim();
   if (!title) { showToast('error','⚠','Please add a course title.'); return; }
   const newCourse = {
-    id: 'course-'+Date.now(), title,
+    id: 'course-'+Date.now(),
+    title,
     level: document.getElementById('b-level').value,
     desc: document.getElementById('b-desc').value,
     emoji: document.getElementById('b-emoji').value || '📚',
@@ -2135,7 +2324,9 @@ function publishCourse() {
   resetBuilder();
 }
 
-function saveDraft() { showToast('success','💾','Draft saved.'); }
+function saveDraft() {
+  showToast('success','💾','Draft saved.');
+}
 
 function collectLessons() {
   const lessons = [];
@@ -2143,7 +2334,8 @@ function collectLessons() {
     const idx = el.id.replace('lbi-title-','');
     const kpRaw = document.getElementById(`lbi-kp-${idx}`)?.value || '';
     lessons.push({
-      id: 'l'+idx, title: el.value || `Lesson ${parseInt(idx)+1}`,
+      id: 'l'+idx,
+      title: el.value || `Lesson ${parseInt(idx)+1}`,
       type: document.getElementById(`lbi-type-${idx}`)?.value || 'video',
       videoUrl: document.getElementById(`lbi-video-${idx}`)?.value || '',
       content: document.getElementById(`lbi-content-${idx}`)?.value || '',
@@ -2160,7 +2352,9 @@ function collectQuizzes() {
     const opts = [0,1,2,3].map(oi => document.getElementById(`qbi-opt-${idx}-${oi}`)?.value || '').filter(Boolean);
     const correctRadio = document.querySelector(`input[name="correct-${idx}"]:checked`);
     quizzes.push({
-      id: 'q'+idx, question: el.value, options: opts,
+      id: 'q'+idx,
+      question: el.value,
+      options: opts,
       correct: correctRadio ? parseInt(correctRadio.value) : 0,
       explanation: document.getElementById(`qbi-exp-${idx}`)?.value || '',
     });
@@ -2185,27 +2379,34 @@ async function renderAdminStudents() {
   container.style.display = 'none';
 
   try {
-    // ── CHANGE: now selects full_name from profiles ──
+    // Get all profiles — no role filter so RLS doesn't block
     const { data: profiles, error } = await _supabase
       .from('profiles')
-      .select('id, email, full_name, role, created_at')
+      .select('id, email, role, created_at')
       .order('created_at', { ascending: false });
 
+    // If RLS blocks this, fall back to user_xp table which has less restriction
     let finalProfiles = profiles;
     if (error || !profiles || !profiles.length) {
       const { data: xpFallback } = await _supabase.from('user_xp').select('user_id, xp, level, streak, last_active');
       if (xpFallback && xpFallback.length) {
-        finalProfiles = xpFallback.map(x => ({ id: x.user_id, email: 'user-' + x.user_id.slice(0,8), full_name: null, role: 'student', created_at: x.last_active }));
-      } else if (error) { throw error; }
+        finalProfiles = xpFallback.map(x => ({ id: x.user_id, email: 'user-' + x.user_id.slice(0,8), role: 'student', created_at: x.last_active }));
+      } else if (error) {
+        throw error;
+      }
     }
 
+    // Get XP for all users
     const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level, streak');
     const xpMap = {};
     (xpData || []).forEach(x => { xpMap[x.user_id] = x; });
 
+    // Get lesson completion counts
     const { data: progressData } = await _supabase.from('course_progress').select('user_id, lesson_id').eq('completed', true);
     const progressMap = {};
-    (progressData || []).forEach(p => { progressMap[p.user_id] = (progressMap[p.user_id] || 0) + 1; });
+    (progressData || []).forEach(p => {
+      progressMap[p.user_id] = (progressMap[p.user_id] || 0) + 1;
+    });
 
     if (!finalProfiles || !finalProfiles.length) {
       loading.textContent = 'No students have signed up yet.';
@@ -2230,12 +2431,11 @@ async function renderAdminStudents() {
           const xp = xpMap[p.id] || { xp: 0, level: 1 };
           const lessons = progressMap[p.id] || 0;
           const joined = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          // ── CHANGE: use full_name (first + last) for admin view, fall back to email-derived ──
-          const displayName = p.full_name || p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
+          const nameFromEmail = p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
           const isAdmin = ADMIN_EMAILS.includes(p.email.toLowerCase());
           return `
             <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.85rem 1.2rem;border-top:1px solid var(--border-w);align-items:center;transition:background 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
-              <div style="font-size:0.88rem;font-weight:500;">${displayName} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
+              <div style="font-size:0.88rem;font-weight:500;">${nameFromEmail} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.email}</div>
               <div style="font-size:0.82rem;color:var(--violet);">Lv ${xp.level}</div>
               <div style="font-size:0.82rem;color:var(--cyan);">${xp.xp}</div>
@@ -2270,6 +2470,7 @@ async function renderAdminStats() {
     const avgXP = totalStudents ? Math.round(totalXP / totalStudents) : 0;
     const totalCompletions = (progressData || []).length;
 
+    // Per course stats
     const courseStats = {};
     courses.filter(c => !c.isDemo).forEach(c => {
       const completions = (progressData || []).filter(p => p.course_id === c.id);
@@ -2282,6 +2483,7 @@ async function renderAdminStats() {
     content.style.display = 'block';
 
     content.innerHTML = `
+      <!-- Summary stats -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
         ${[
           { val: totalStudents, label: 'Total Students', color: 'var(--cyan)' },
@@ -2294,6 +2496,8 @@ async function renderAdminStats() {
             <div style="font-size:0.78rem;color:var(--text-muted);">${s.label}</div>
           </div>`).join('')}
       </div>
+
+      <!-- Per course breakdown -->
       <div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">Course Breakdown</div>
       <div style="display:flex;flex-direction:column;gap:1rem;">
         ${Object.values(courseStats).map(c => {
@@ -2341,9 +2545,10 @@ async function renderAdminSubmissions() {
 
     if (error) throw error;
 
-    const { data: profiles } = await _supabase.from('profiles').select('id, email, full_name');
+    // Get profiles to show emails
+    const { data: profiles } = await _supabase.from('profiles').select('id, email');
     const profileMap = {};
-    (profiles || []).forEach(p => { profileMap[p.id] = p.full_name || p.email; });
+    (profiles || []).forEach(p => { profileMap[p.id] = p.email; });
 
     loading.style.display = 'none';
     container.style.display = 'block';
@@ -2361,7 +2566,7 @@ async function renderAdminSubmissions() {
       </div>
       <div style="display:flex;flex-direction:column;gap:0.75rem;">
         ${submissions.map(s => {
-          const name = profileMap[s.user_id] || 'Unknown';
+          const email = profileMap[s.user_id] || 'Unknown';
           const date = new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
           const avg = avgRating(s);
           const avgColor = avg >= 4 ? 'var(--cyan)' : avg >= 3 ? 'var(--gold)' : '#ff6b6b';
@@ -2370,7 +2575,7 @@ async function renderAdminSubmissions() {
             <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.25rem;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
                 <div style="display:flex;align-items:center;gap:0.75rem;">
-                  <span style="font-size:0.82rem;font-weight:600;">${name}</span>
+                  <span style="font-size:0.82rem;font-weight:600;">${email}</span>
                   <span style="font-size:0.72rem;color:var(--text-dim);">${s.task_id}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:1rem;">
@@ -2462,6 +2667,7 @@ function toggleNotif(e) {
   if (!isOpen) {
     renderNotifs();
     dd.style.display = 'block';
+    // Mark all as read
     notifications.forEach(n => n.unread = false);
     document.getElementById('notif-dot').style.display = 'none';
   }
@@ -2498,10 +2704,13 @@ function closeAllDropdowns() {
 
 document.addEventListener('click', closeAllDropdowns);
 
+// Hook notifications into existing events
 const _origAddXP = addXP;
+// Hook into showToast to also generate notifications
 const _origShowToast = showToast;
 function showToast(type, icon, msg) {
   _origShowToast(type, icon, msg);
+  // Generate notification for meaningful events
   if (type === 'success' && appState.user) {
     addNotif(icon, msg);
     renderNotifs();
@@ -2511,14 +2720,6 @@ function showToast(type, icon, msg) {
 // ════════════════════════════════
 // PROFILE
 // ════════════════════════════════
-function switchProfileTab(tab) {
-  document.querySelectorAll('.profile-tab').forEach((t,i) => {
-    t.classList.toggle('active', (i===0&&tab==='stats')||(i===1&&tab==='edit')||(i===2&&tab==='password'));
-  });
-  document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('profile-tab-'+tab)?.classList.add('active');
-}
-
 function openProfile() {
   const u = appState.user;
   if (!u) return;
@@ -2529,64 +2730,19 @@ function openProfile() {
   document.getElementById('profile-xp').textContent = u.xp;
   document.getElementById('profile-lessons').textContent = u.lessonsCompleted.length;
   document.getElementById('profile-streak').textContent = u.streak;
-  document.getElementById('edit-name').value = u.name;
+  // Badges
   const badgeContainer = document.getElementById('profile-badges');
   const earned = allBadges.filter(b => u.badges.includes(b.id));
-  badgeContainer.innerHTML = earned.length
-    ? earned.map(b => `<div class="badge earned" style="min-width:60px;padding:0.6rem 0.75rem;"><div class="badge-icon" style="font-size:1.2rem;">${b.icon}</div><div class="badge-name">${b.name}</div></div>`).join('')
-    : '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
-  // Reset messages + fields
-  ['edit-name-msg','edit-password-msg'].forEach(id => { const el = document.getElementById(id); if(el){el.style.display='none';el.textContent='';} });
-  const np = document.getElementById('new-password'); if(np) np.value = '';
-  const cp = document.getElementById('confirm-password'); if(cp) cp.value = '';
-  switchProfileTab('stats');
+  if (earned.length) {
+    badgeContainer.innerHTML = earned.map(b => `
+      <div class="badge earned" style="min-width:60px;padding:0.6rem 0.75rem;">
+        <div class="badge-icon" style="font-size:1.2rem;">${b.icon}</div>
+        <div class="badge-name">${b.name}</div>
+      </div>`).join('');
+  } else {
+    badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
+  }
   document.getElementById('profile-modal').classList.add('open');
-}
-
-async function saveProfileName() {
-  const newName = document.getElementById('edit-name').value.trim();
-  if (!newName) { showProfileMsg('edit-name-msg', 'error', 'Please enter a name.'); return; }
-  const u = appState.user;
-  try {
-    if (u.supabaseId) {
-      await _supabase.from('profiles').update({ full_name: newName }).eq('id', u.supabaseId);
-      await _supabase.auth.updateUser({ data: { name: newName } });
-    }
-    u.name = newName;
-    document.getElementById('profile-name').textContent = newName;
-    document.getElementById('profile-avatar-lg').textContent = newName.slice(0,2).toUpperCase();
-    document.getElementById('sidebar-name').textContent = newName;
-    document.getElementById('sidebar-avatar').textContent = newName.slice(0,2).toUpperCase();
-    document.getElementById('topbar-avatar').textContent = newName.slice(0,2).toUpperCase();
-    document.getElementById('welcome-name').textContent = newName.split(' ')[0];
-    const myEntry = leaderboard.find(l => l.isYou);
-    if (myEntry) { myEntry.name = newName; myEntry.avatar = newName.slice(0,2).toUpperCase(); }
-    showProfileMsg('edit-name-msg', 'success', '✓ Name updated!');
-  } catch(e) {
-    showProfileMsg('edit-name-msg', 'error', 'Failed to save. Please try again.');
-  }
-}
-
-async function savePassword() {
-  const newPass = document.getElementById('new-password').value;
-  const confirmPass = document.getElementById('confirm-password').value;
-  if (!newPass || newPass.length < 6) { showProfileMsg('edit-password-msg', 'error', 'Password must be at least 6 characters.'); return; }
-  if (newPass !== confirmPass) { showProfileMsg('edit-password-msg', 'error', "Passwords don't match."); return; }
-  try {
-    const { error } = await _supabase.auth.updateUser({ password: newPass });
-    if (error) { showProfileMsg('edit-password-msg', 'error', error.message); return; }
-    document.getElementById('new-password').value = '';
-    document.getElementById('confirm-password').value = '';
-    showProfileMsg('edit-password-msg', 'success', '✓ Password updated!');
-  } catch(e) {
-    showProfileMsg('edit-password-msg', 'error', 'Failed to update. Please try again.');
-  }
-}
-
-function showProfileMsg(id, type, text) {
-  const el = document.getElementById(id); if (!el) return;
-  el.textContent = text; el.className = 'profile-msg ' + type; el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
 // ════════════════════════════════
@@ -2594,7 +2750,7 @@ function showProfileMsg(id, type, text) {
 // ════════════════════════════════
 let taskState = {
   currentIdx: 0,
-  ratings: {},
+  ratings: {}, // taskId -> { helpfulness, accuracy, format, instruction_following, rationale }
   startTime: null
 };
 
@@ -2651,18 +2807,23 @@ function renderTaskUI(container) {
         <span class="practice-counter">Task ${idx + 1} of ${total}</span>
       </div>
       <div class="practice-progress">${pips}</div>
+
       <div class="task-card">
         <div class="task-section-label">Prompt</div>
         <div class="task-prompt">${task.prompt}</div>
         <div class="task-section-label">AI Response</div>
         <div class="task-response">${task.response}</div>
+
         <div class="task-section-label" style="margin-bottom:0.75rem;">Rate this response</div>
         <div class="rubric-grid">${rubricHtml}</div>
+
         <div class="rationale-wrap">
           <div class="task-section-label">Written Rationale <span style="color:#ff6b6b;">*</span></div>
           <textarea id="task-rationale" placeholder="Explain your ratings. What did the response do well? What was missing or inaccurate?" style="margin-top:0.4rem;">${saved.rationale||''}</textarea>
         </div>
+
         <div id="task-error" style="font-size:0.8rem;color:#ff6b6b;margin-bottom:0.75rem;display:none;">Please rate all dimensions and provide a rationale before submitting.</div>
+
         <div class="task-nav">
           ${idx > 0 ? `<button class="btn btn-ghost btn-sm" onclick="taskNav(${idx-1})">← Previous</button>` : ''}
           <button class="btn btn-primary" onclick="submitTask('${task.id}')">
@@ -2676,6 +2837,7 @@ function renderTaskUI(container) {
 function setRating(taskId, dimension, value) {
   if (!taskState.ratings[taskId]) taskState.ratings[taskId] = {};
   taskState.ratings[taskId][dimension] = value;
+  // Update stars visually
   const row = document.getElementById('stars-' + dimension);
   if (!row) return;
   row.querySelectorAll('.star').forEach(s => {
@@ -2693,11 +2855,19 @@ async function submitTask(taskId) {
   const rationale = document.getElementById('task-rationale')?.value.trim();
   const dims = ['helpfulness', 'accuracy', 'format', 'instruction_following'];
   const errEl = document.getElementById('task-error');
+
+  // Validate all dims rated
   const allRated = dims.every(d => ratings[d]);
-  if (!allRated || !rationale) { errEl.style.display = 'block'; return; }
+  if (!allRated || !rationale) {
+    errEl.style.display = 'block';
+    return;
+  }
   errEl.style.display = 'none';
+
+  // Save rationale
   taskState.ratings[taskId].rationale = rationale;
 
+  // Save to Supabase
   const u = appState.user;
   if (u && u.supabaseId && !appState.isDemo) {
     const timeSpent = Math.round((Date.now() - taskState.startTime) / 1000);
@@ -2717,6 +2887,7 @@ async function submitTask(taskId) {
     } catch(e) { console.warn('Task save failed', e); }
   }
 
+  // Advance
   addXP(50);
   spawnXPPop('+50 XP');
   showToast('success', '✓', 'Task submitted! Great work.');
@@ -2724,9 +2895,24 @@ async function submitTask(taskId) {
   const nextUndone = practiceTasks.findIndex((t, i) => i > taskState.currentIdx && !taskState.ratings[t.id]);
   taskState.currentIdx = nextUndone >= 0 ? nextUndone : taskState.currentIdx + 1;
   if (taskState.currentIdx >= practiceTasks.length) taskState.currentIdx = practiceTasks.length - 1;
+
   taskState.startTime = Date.now();
   renderTaskUI(document.getElementById('lesson-content'));
 }
+
+// ════════════════════════════════
+// PRACTICE TASKS DATA
+// ════════════════════════════════
+const practiceTasks = [
+  { id: 'task-1', prompt: 'Explain what machine learning is to someone with no technical background.', response: 'Machine learning is when computers learn from examples. You show a computer lots of pictures of cats and dogs, and eventually it figures out the difference on its own. It\'s basically pattern recognition at scale. The more data you give it, the better it gets.', difficulty: 'Introductory' },
+  { id: 'task-2', prompt: 'Write a Python function that returns the square of a number.', response: 'def square(n):\n    return n * n\n\nThis function takes a number and multiplies it by itself. For example, square(4) returns 16.', difficulty: 'Introductory' },
+  { id: 'task-3', prompt: 'What are three benefits of regular exercise?', response: 'Exercise is good for you in many ways. First, it helps your heart stay healthy. Second, it can improve your mood because of endorphins. Third, it builds muscle strength. You should try to exercise at least three times a week for best results. Also make sure to drink water.', difficulty: 'Introductory' },
+  { id: 'task-4', prompt: 'Summarize the causes of World War I in 2-3 sentences.', response: 'World War I was caused by the assassination of Archduke Franz Ferdinand of Austria-Hungary in 1914. This triggered a chain of alliances that pulled major European powers into conflict. Underlying tensions including militarism, imperial rivalries, and nationalist movements had already made Europe a powder keg.', difficulty: 'Intermediate' },
+  { id: 'task-5', prompt: 'How do I make my password more secure?', response: 'Use at least 12 characters. Mix uppercase and lowercase letters with numbers and symbols. Avoid obvious words like your name or birthday. Don\'t reuse passwords across sites. Consider a password manager to keep track of everything.', difficulty: 'Introductory' },
+  { id: 'task-6', prompt: 'Explain the difference between supervised and unsupervised learning.', response: 'Supervised learning uses labeled data — you tell the model what the right answer is during training. For example, showing it images labeled \"cat\" or \"dog.\" Unsupervised learning finds patterns in data without labels — the model groups similar things together on its own. Supervised learning is used for prediction tasks; unsupervised for discovery tasks.', difficulty: 'Intermediate' },
+  { id: 'task-7', prompt: 'Write a professional email declining a meeting invitation.', response: 'Hi [Name],\n\nThank you for the invitation. Unfortunately I have a conflict at that time and won\'t be able to attend. Please let me know if there\'s a recording or notes I can review afterward.\n\nBest,\n[Your name]', difficulty: 'Introductory' },
+  { id: 'task-8', prompt: 'What is the difference between correlation and causation? Give an example.', response: 'Correlation means two things tend to happen together. Causation means one thing directly causes another. Ice cream sales and drowning rates are correlated — both rise in summer — but ice cream doesn\'t cause drowning. The real cause is hot weather, which increases both. Always ask: is there a third factor explaining this relationship?', difficulty: 'Intermediate' }
+];
 
 // ════════════════════════════════
 // PILOT GATE
@@ -2736,7 +2922,11 @@ function isPilotUnlocked() {
 }
 
 function handleCourseClick(courseId) {
-  if (isPilotUnlocked()) { openCourse(courseId); } else { checkPilotAccess(); }
+  if (isPilotUnlocked()) {
+    openCourse(courseId);
+  } else {
+    checkPilotAccess();
+  }
 }
 
 function checkPilotAccess() {
@@ -2775,35 +2965,49 @@ async function submitPilotWaitlist() {
       document.getElementById('pw-name').style.display = 'none';
       document.getElementById('pw-email').style.display = 'none';
       btn.style.display = 'none';
-    } else { btn.disabled = false; btn.textContent = 'Error — try again'; }
-  } catch(e) { btn.disabled = false; btn.textContent = 'Error — try again'; }
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Error — try again';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Error — try again';
+  }
 }
 
 window.addEventListener('load', async () => {
+  // Hide all views while we check session
   document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+
   const sessionType = localStorage.getItem('lcai_session_type');
   const lastPage = localStorage.getItem('lcai_last_page') || 'dashboard';
 
   try {
+    // Restore admin session
     if (sessionType === 'admin') {
       const email = localStorage.getItem('lcai_session_email') || ADMIN_EMAIL;
       handleAdminLogin(email);
       initFadeIns();
       return;
     }
+
+    // Restore demo session
     if (sessionType === 'demo') {
       handleDemoLogin();
       initFadeIns();
       return;
     }
+
+    // Restore student session via Supabase
     const { data: { session } } = await _supabase.auth.getSession();
     if (session && session.user) {
       const u = session.user;
       const name = capitalize((u.user_metadata?.name || u.email.split('@')[0]).replace(/[^a-zA-Z]/g,' ').trim() || 'Learner');
       const userData = await loadSupabaseProfile(u.id, name, u.email);
+      // loginUser handles showView + renderApp, then restore last page
       appState.user = userData;
       appState.isAdmin = false;
-      await loadLeaderboard();
+      leaderboard.push({ name: userData.name, xp: userData.xp, level: userData.level, avatar: userData.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
       showView('view-app');
       renderApp();
       navTo(lastPage);
@@ -2816,6 +3020,7 @@ window.addEventListener('load', async () => {
     const auth = document.getElementById('view-auth');
     auth.style.display = 'flex';
   }
+
   initFadeIns();
 });
 </script>
