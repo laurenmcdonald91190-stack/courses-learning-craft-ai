@@ -421,6 +421,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .profile-stat-label{font-size:0.68rem;color:var(--text-muted);margin-top:0.2rem;}
 .profile-badges-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0;}
 
+/* ── PROFILE TABS ── */
+.profile-tabs{display:flex;gap:0;border:1px solid var(--border-w);border-radius:6px;margin-bottom:1.5rem;overflow:hidden;}
+.profile-tab{flex:1;padding:0.5rem;font-size:0.8rem;font-weight:500;text-align:center;cursor:pointer;background:transparent;border:none;color:var(--text-muted);transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.profile-tab.active{background:rgba(0,229,200,0.1);color:var(--cyan);}
+.profile-section{display:none;}
+.profile-section.active{display:block;}
+.profile-edit-field{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;text-align:left;}
+.profile-edit-field label{font-family:'DM Sans',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);}
+.profile-edit-field input{background:var(--bg);border:1px solid var(--border-w);border-radius:5px;padding:0.65rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;width:100%;}
+.profile-edit-field input:focus{border-color:rgba(0,229,200,0.4);}
+.profile-msg{font-size:0.8rem;margin-top:0.5rem;display:none;text-align:left;}
+.profile-msg.success{color:var(--cyan);}
+.profile-msg.error{color:#ff6b6b;}
+
 /* ── PRACTICE TASKS ── */
 .practice-wrap{display:flex;flex-direction:column;gap:1.5rem;}
 .practice-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
@@ -840,22 +854,59 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profile-modal" onclick="closeModal('profile-modal')">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:500px;">
     <span class="modal-close" onclick="closeModal('profile-modal')">✕</span>
     <div class="profile-modal-inner">
       <div class="profile-avatar-lg" id="profile-avatar-lg">—</div>
       <div style="font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;" id="profile-name">—</div>
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;" id="profile-email">—</div>
-      <div style="font-size:0.78rem;color:var(--violet);" id="profile-level">Level 1</div>
-      <div class="profile-stat-row">
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
+      <div style="font-size:0.78rem;color:var(--violet);margin-bottom:1.25rem;" id="profile-level">Level 1</div>
+
+      <div class="profile-tabs">
+        <button class="profile-tab active" onclick="switchProfileTab('stats')">Stats</button>
+        <button class="profile-tab" onclick="switchProfileTab('edit')">Edit Profile</button>
+        <button class="profile-tab" onclick="switchProfileTab('password')">Password</button>
       </div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
-      <div class="profile-badges-row" id="profile-badges"></div>
-      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
+
+      <!-- Stats tab -->
+      <div class="profile-section active" id="profile-tab-stats">
+        <div class="profile-stat-row">
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
+        <div class="profile-badges-row" id="profile-badges"></div>
+        <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
+          <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Edit Profile tab -->
+      <div class="profile-section" id="profile-tab-edit">
+        <div class="profile-edit-field">
+          <label>Display Name</label>
+          <input type="text" id="edit-name" placeholder="Your full name">
+        </div>
+        <div id="edit-name-msg" class="profile-msg"></div>
+        <button class="btn btn-primary btn-full" onclick="saveProfileName()" style="margin-top:0.5rem;">Save Name</button>
+      </div>
+
+      <!-- Password tab -->
+      <div class="profile-section" id="profile-tab-password">
+        <div class="profile-edit-field">
+          <label>New Password</label>
+          <div style="position:relative;">
+            <input type="password" id="new-password" placeholder="At least 6 characters" style="padding-right:2.8rem;">
+            <span onclick="togglePw('new-password',this)" style="position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);cursor:pointer;font-size:0.8rem;color:var(--text-muted);user-select:none;">Show</span>
+          </div>
+        </div>
+        <div class="profile-edit-field">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirm-password" placeholder="Repeat password">
+        </div>
+        <div id="edit-password-msg" class="profile-msg"></div>
+        <button class="btn btn-primary btn-full" onclick="savePassword()" style="margin-top:0.5rem;">Update Password</button>
       </div>
     </div>
   </div>
@@ -1033,13 +1084,34 @@ const demoCourse = {
   ]
 };
 
-let leaderboard = [
-  { name: 'Alex M.', xp: 2840, level: 8, avatar: 'AM', color: '#00e5c8' },
-  { name: 'Jordan R.', xp: 2210, level: 7, avatar: 'JR', color: '#9b5de5' },
-  { name: 'Sam T.', xp: 1950, level: 6, avatar: 'ST', color: '#f5c842' },
-  { name: 'Casey L.', xp: 1740, level: 5, avatar: 'CL', color: '#00e5c8' },
-  { name: 'Morgan P.', xp: 1320, level: 4, avatar: 'MP', color: '#9b5de5' },
-];
+// Leaderboard populated from Supabase — no fake data
+let leaderboard = [];
+
+// ── Load real leaderboard from Supabase ──
+async function loadLeaderboard() {
+  try {
+    const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level').order('xp', { ascending: false }).limit(20);
+    const { data: profiles } = await _supabase.from('profiles').select('id, full_name, email');
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p; });
+    const avatarColors = ['#00e5c8','#9b5de5','#f5c842','#ff6b9d','#00d4ff'];
+    leaderboard = (xpData || []).map((x, i) => {
+      const profile = profileMap[x.user_id];
+      const name = profile?.full_name || (profile?.email ? profile.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() : 'Learner');
+      const isYou = appState.user && appState.user.supabaseId === x.user_id;
+      return { name, xp: x.xp, level: x.level, avatar: name.slice(0,2).toUpperCase(), color: avatarColors[i % avatarColors.length], isYou };
+    });
+    // Ensure current user appears even if outside top 20
+    if (appState.user && appState.user.supabaseId && !leaderboard.find(l => l.isYou)) {
+      leaderboard.push({ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+    }
+  } catch(e) {
+    console.warn('Leaderboard load failed', e);
+    if (appState.user) {
+      leaderboard = [{ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true }];
+    }
+  }
+}
 
 const allBadges = [
   { id: 'first-lesson', icon: '🎬', name: 'First Lesson', desc: 'Complete your first lesson', xpReq: 0, lessonReq: 1 },
@@ -1250,10 +1322,10 @@ function ensureAdminTabs() {
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
 
-function loginUser(user) {
+async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
-  leaderboard.push({ name: user.name, xp: user.xp, level: user.level, avatar: user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+  await loadLeaderboard();
   showView('view-app');
   renderApp();
   navigateAfterLogin();
@@ -1264,6 +1336,7 @@ function handleLogout() {
   appState.user = null;
   appState.isAdmin = false;
   appState.isDemo = false;
+  leaderboard = [];
   try {
     localStorage.removeItem('lcai_session_type');
     localStorage.removeItem('lcai_session_email');
@@ -1442,6 +1515,10 @@ function renderLeaderboardMini() {
   const container = document.getElementById('dashboard-lb');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp).slice(0,5);
+  if (!sorted.length) {
+    container.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners yet — be the first on the board!</div>';
+    return;
+  }
   container.innerHTML = sorted.map((l,i) => `
     <div class="lb-row ${l.isYou?'you':''}">
       <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
@@ -1456,6 +1533,10 @@ function renderLeaderboardFull() {
   const container = document.getElementById('lb-full-list');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp);
+  if (!sorted.length) {
+    container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners on the leaderboard yet. Complete lessons to earn XP and appear here!</div>';
+    return;
+  }
   container.innerHTML = `
     <div class="lb-full-row header">
       <div>Rank</div><div></div><div>Name</div><div>Level</div><div>XP</div>
@@ -2430,6 +2511,14 @@ function showToast(type, icon, msg) {
 // ════════════════════════════════
 // PROFILE
 // ════════════════════════════════
+function switchProfileTab(tab) {
+  document.querySelectorAll('.profile-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0&&tab==='stats')||(i===1&&tab==='edit')||(i===2&&tab==='password'));
+  });
+  document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('profile-tab-'+tab)?.classList.add('active');
+}
+
 function openProfile() {
   const u = appState.user;
   if (!u) return;
@@ -2440,18 +2529,64 @@ function openProfile() {
   document.getElementById('profile-xp').textContent = u.xp;
   document.getElementById('profile-lessons').textContent = u.lessonsCompleted.length;
   document.getElementById('profile-streak').textContent = u.streak;
+  document.getElementById('edit-name').value = u.name;
   const badgeContainer = document.getElementById('profile-badges');
   const earned = allBadges.filter(b => u.badges.includes(b.id));
-  if (earned.length) {
-    badgeContainer.innerHTML = earned.map(b => `
-      <div class="badge earned" style="min-width:60px;padding:0.6rem 0.75rem;">
-        <div class="badge-icon" style="font-size:1.2rem;">${b.icon}</div>
-        <div class="badge-name">${b.name}</div>
-      </div>`).join('');
-  } else {
-    badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
-  }
+  badgeContainer.innerHTML = earned.length
+    ? earned.map(b => `<div class="badge earned" style="min-width:60px;padding:0.6rem 0.75rem;"><div class="badge-icon" style="font-size:1.2rem;">${b.icon}</div><div class="badge-name">${b.name}</div></div>`).join('')
+    : '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
+  // Reset messages + fields
+  ['edit-name-msg','edit-password-msg'].forEach(id => { const el = document.getElementById(id); if(el){el.style.display='none';el.textContent='';} });
+  const np = document.getElementById('new-password'); if(np) np.value = '';
+  const cp = document.getElementById('confirm-password'); if(cp) cp.value = '';
+  switchProfileTab('stats');
   document.getElementById('profile-modal').classList.add('open');
+}
+
+async function saveProfileName() {
+  const newName = document.getElementById('edit-name').value.trim();
+  if (!newName) { showProfileMsg('edit-name-msg', 'error', 'Please enter a name.'); return; }
+  const u = appState.user;
+  try {
+    if (u.supabaseId) {
+      await _supabase.from('profiles').update({ full_name: newName }).eq('id', u.supabaseId);
+      await _supabase.auth.updateUser({ data: { name: newName } });
+    }
+    u.name = newName;
+    document.getElementById('profile-name').textContent = newName;
+    document.getElementById('profile-avatar-lg').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('sidebar-name').textContent = newName;
+    document.getElementById('sidebar-avatar').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('topbar-avatar').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('welcome-name').textContent = newName.split(' ')[0];
+    const myEntry = leaderboard.find(l => l.isYou);
+    if (myEntry) { myEntry.name = newName; myEntry.avatar = newName.slice(0,2).toUpperCase(); }
+    showProfileMsg('edit-name-msg', 'success', '✓ Name updated!');
+  } catch(e) {
+    showProfileMsg('edit-name-msg', 'error', 'Failed to save. Please try again.');
+  }
+}
+
+async function savePassword() {
+  const newPass = document.getElementById('new-password').value;
+  const confirmPass = document.getElementById('confirm-password').value;
+  if (!newPass || newPass.length < 6) { showProfileMsg('edit-password-msg', 'error', 'Password must be at least 6 characters.'); return; }
+  if (newPass !== confirmPass) { showProfileMsg('edit-password-msg', 'error', "Passwords don't match."); return; }
+  try {
+    const { error } = await _supabase.auth.updateUser({ password: newPass });
+    if (error) { showProfileMsg('edit-password-msg', 'error', error.message); return; }
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
+    showProfileMsg('edit-password-msg', 'success', '✓ Password updated!');
+  } catch(e) {
+    showProfileMsg('edit-password-msg', 'error', 'Failed to update. Please try again.');
+  }
+}
+
+function showProfileMsg(id, type, text) {
+  const el = document.getElementById(id); if (!el) return;
+  el.textContent = text; el.className = 'profile-msg ' + type; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
 // ════════════════════════════════
@@ -2668,7 +2803,7 @@ window.addEventListener('load', async () => {
       const userData = await loadSupabaseProfile(u.id, name, u.email);
       appState.user = userData;
       appState.isAdmin = false;
-      leaderboard.push({ name: userData.name, xp: userData.xp, level: userData.level, avatar: userData.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+      await loadLeaderboard();
       showView('view-app');
       renderApp();
       navTo(lastPage);
