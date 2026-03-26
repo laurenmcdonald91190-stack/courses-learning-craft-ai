@@ -729,6 +729,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <a class="nav-item active" onclick="adminNavTo('courses')"><span class="nav-icon">◈</span> Courses</a>
         <a class="nav-item" onclick="adminNavTo('builder')"><span class="nav-icon">✦</span> Course Builder</a>
         <a class="nav-item" onclick="adminNavTo('students')"><span class="nav-icon">⊞</span> Students</a>
+        <a class="nav-item" onclick="adminNavTo('stats')"><span class="nav-icon">📊</span> Course Stats</a>
+        <a class="nav-item" onclick="adminNavTo('submissions')"><span class="nav-icon">🗂️</span> Task Submissions</a>
       </nav>
       <div class="sidebar-bottom">
         <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
@@ -808,8 +810,32 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
         <!-- Students panel -->
         <div id="admin-panel-students" class="admin-panel">
-          <div class="section-head"><h3>Enrolled Students</h3></div>
-          <div class="lb-full" id="admin-students-list"></div>
+          <div class="section-head" style="margin-bottom:1.2rem;">
+            <h3>Enrolled Students</h3>
+            <button class="btn btn-ghost btn-sm" onclick="refreshStudents()">↻ Refresh</button>
+          </div>
+          <div id="admin-students-loading" style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">Loading students...</div>
+          <div class="lb-full" id="admin-students-list" style="display:none;"></div>
+        </div>
+
+        <!-- Course Stats panel -->
+        <div id="admin-panel-stats" class="admin-panel">
+          <div class="section-head" style="margin-bottom:1.5rem;">
+            <h3>Course Stats</h3>
+            <button class="btn btn-ghost btn-sm" onclick="refreshStats()">↻ Refresh</button>
+          </div>
+          <div id="admin-stats-loading" style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">Loading stats...</div>
+          <div id="admin-stats-content" style="display:none;"></div>
+        </div>
+
+        <!-- Task Submissions panel -->
+        <div id="admin-panel-submissions" class="admin-panel">
+          <div class="section-head" style="margin-bottom:1.2rem;">
+            <h3>Task Submissions</h3>
+            <button class="btn btn-ghost btn-sm" onclick="refreshSubmissions()">↻ Refresh</button>
+          </div>
+          <div id="admin-submissions-loading" style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">Loading submissions...</div>
+          <div id="admin-submissions-list" style="display:none;"></div>
         </div>
       </div>
     </main>
@@ -1388,6 +1414,8 @@ function ensureAdminTabs() {
     <button class="admin-tab active" onclick="adminNavTo('courses')">Courses</button>
     <button class="admin-tab" onclick="adminNavTo('builder')">Course Builder</button>
     <button class="admin-tab" onclick="adminNavTo('students')">Students</button>
+    <button class="admin-tab" onclick="adminNavTo('stats')">Course Stats</button>
+    <button class="admin-tab" onclick="adminNavTo('submissions')">Task Submissions</button>
   </div>`;
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
@@ -2147,6 +2175,8 @@ function adminNavTo(panel) {
   document.getElementById(`admin-panel-${panel}`)?.classList.add('active');
   document.querySelectorAll('.sidebar .nav-item').forEach(n => n.classList.toggle('active', n.getAttribute('onclick')?.includes(panel)));
   if (panel === 'students') renderAdminStudents();
+  if (panel === 'stats') renderAdminStats();
+  if (panel === 'submissions') renderAdminSubmissions();
 }
 
 // Inject tabs into admin on load (ensureAdminTabs also called on login)
@@ -2341,27 +2371,238 @@ function resetBuilder() {
   lessonCount = 0; quizCount = 0;
 }
 
-function renderAdminStudents() {
+async function renderAdminStudents() {
+  const loading = document.getElementById('admin-students-loading');
   const container = document.getElementById('admin-students-list');
   if (!container) return;
-  const mockStudents = [
-    { name: 'Alex M.', email: 'alex@example.com', xp: 2840, lessons: 24 },
-    { name: 'Jordan R.', email: 'jordan@example.com', xp: 2210, lessons: 19 },
-    { name: 'Sam T.', email: 'sam@example.com', xp: 1950, lessons: 16 },
-  ];
-  container.innerHTML = `
-    <div class="lb-full-row header" style="grid-template-columns:1fr 1fr 100px 80px;">
-      <div>Name</div><div>Email</div><div>Lessons</div><div>XP</div>
-    </div>` +
-  mockStudents.map(s=>`
-    <div class="lb-full-row" style="grid-template-columns:1fr 1fr 100px 80px;">
-      <div>${s.name}</div>
-      <div style="color:var(--text-muted);font-size:0.82rem;">${s.email}</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--violet);">${s.lessons}</div>
-      <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--cyan);">${s.xp}</div>
-    </div>
-  `).join('');
+  loading.style.display = 'block';
+  container.style.display = 'none';
+
+  try {
+    // Get all profiles
+    const { data: profiles, error } = await _supabase
+      .from('profiles')
+      .select('id, email, role, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Get XP for all users
+    const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level, streak');
+    const xpMap = {};
+    (xpData || []).forEach(x => { xpMap[x.user_id] = x; });
+
+    // Get lesson completion counts
+    const { data: progressData } = await _supabase.from('course_progress').select('user_id, lesson_id').eq('completed', true);
+    const progressMap = {};
+    (progressData || []).forEach(p => {
+      progressMap[p.user_id] = (progressMap[p.user_id] || 0) + 1;
+    });
+
+    if (!profiles || !profiles.length) {
+      loading.textContent = 'No students have signed up yet.';
+      return;
+    }
+
+    loading.style.display = 'none';
+    container.style.display = 'block';
+
+    const students = profiles.filter(p => p.role === 'student' || !p.role);
+    const admins = profiles.filter(p => p.role === 'admin');
+
+    container.innerHTML = `
+      <div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">
+        ${students.length} students · ${admins.length} admins · ${profiles.length} total accounts
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.75rem 1.2rem;background:var(--bg3);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);">
+          <div>Name</div><div>Email</div><div>Level</div><div>XP</div><div>Lessons</div><div>Joined</div>
+        </div>
+        ${profiles.map(p => {
+          const xp = xpMap[p.id] || { xp: 0, level: 1 };
+          const lessons = progressMap[p.id] || 0;
+          const joined = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const nameFromEmail = p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
+          const isAdmin = ADMIN_EMAILS.includes(p.email.toLowerCase());
+          return `
+            <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.85rem 1.2rem;border-top:1px solid var(--border-w);align-items:center;transition:background 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+              <div style="font-size:0.88rem;font-weight:500;">${nameFromEmail} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
+              <div style="font-size:0.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.email}</div>
+              <div style="font-size:0.82rem;color:var(--violet);">Lv ${xp.level}</div>
+              <div style="font-size:0.82rem;color:var(--cyan);">${xp.xp}</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">${lessons}</div>
+              <div style="font-size:0.78rem;color:var(--text-dim);">${joined}</div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    console.error(e);
+    loading.textContent = 'Failed to load students. Check Supabase connection.';
+    loading.style.color = '#ff6b6b';
+  }
 }
+
+function refreshStudents() { renderAdminStudents(); }
+
+async function renderAdminStats() {
+  const loading = document.getElementById('admin-stats-loading');
+  const content = document.getElementById('admin-stats-content');
+  if (!content) return;
+  loading.style.display = 'block';
+  content.style.display = 'none';
+
+  try {
+    const { data: progressData } = await _supabase.from('course_progress').select('user_id, course_id, lesson_id').eq('completed', true);
+    const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level');
+    const { data: profiles } = await _supabase.from('profiles').select('id').eq('role', 'student');
+
+    const totalStudents = (profiles || []).length;
+    const totalXP = (xpData || []).reduce((a, x) => a + (x.xp || 0), 0);
+    const avgXP = totalStudents ? Math.round(totalXP / totalStudents) : 0;
+    const totalCompletions = (progressData || []).length;
+
+    // Per course stats
+    const courseStats = {};
+    courses.filter(c => !c.isDemo).forEach(c => {
+      const completions = (progressData || []).filter(p => p.course_id === c.id);
+      const uniqueStudents = new Set(completions.map(p => p.user_id)).size;
+      const totalLessons = c.lessons.filter(l => l.type !== 'quiz').length;
+      courseStats[c.id] = { title: c.title, emoji: c.emoji, uniqueStudents, completions: completions.length, totalLessons };
+    });
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+
+    content.innerHTML = `
+      <!-- Summary stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+        ${[
+          { val: totalStudents, label: 'Total Students', color: 'var(--cyan)' },
+          { val: totalCompletions, label: 'Lessons Completed', color: 'var(--violet)' },
+          { val: avgXP, label: 'Avg XP per Student', color: 'var(--gold)' },
+          { val: totalXP, label: 'Total XP Earned', color: 'var(--text)' },
+        ].map(s => `
+          <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:8px;padding:1.2rem 1.4rem;">
+            <div style="font-size:1.8rem;font-weight:800;color:${s.color};margin-bottom:0.3rem;">${s.val}</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);">${s.label}</div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Per course breakdown -->
+      <div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">Course Breakdown</div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        ${Object.values(courseStats).map(c => {
+          const pct = c.totalLessons && c.uniqueStudents ? Math.round((c.completions / (c.uniqueStudents * c.totalLessons)) * 100) : 0;
+          return `
+            <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.4rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                  <span style="font-size:1.4rem;">${c.emoji}</span>
+                  <span style="font-weight:700;font-size:0.95rem;">${c.title}</span>
+                </div>
+                <span style="font-size:0.78rem;color:var(--text-muted);">${c.uniqueStudents} students enrolled</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;">
+                <span>${c.completions} lesson completions</span>
+                <span>${pct}% avg completion</span>
+              </div>
+              <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:${Math.min(pct,100)}%;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:3px;transition:width 1s ease;"></div>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    loading.textContent = 'Failed to load stats.';
+    loading.style.color = '#ff6b6b';
+  }
+}
+
+function refreshStats() { renderAdminStats(); }
+
+async function renderAdminSubmissions() {
+  const loading = document.getElementById('admin-submissions-loading');
+  const container = document.getElementById('admin-submissions-list');
+  if (!container) return;
+  loading.style.display = 'block';
+  container.style.display = 'none';
+
+  try {
+    const { data: submissions, error } = await _supabase
+      .from('task_submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+
+    // Get profiles to show emails
+    const { data: profiles } = await _supabase.from('profiles').select('id, email');
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p.email; });
+
+    loading.style.display = 'none';
+    container.style.display = 'block';
+
+    if (!submissions || !submissions.length) {
+      container.innerHTML = '<div style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">No task submissions yet. Students will appear here once they complete practice tasks in Course 3.</div>';
+      return;
+    }
+
+    const avgRating = (s) => ((s.helpfulness + s.accuracy + s.format + s.instruction_following) / 4).toFixed(1);
+
+    container.innerHTML = `
+      <div style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">
+        ${submissions.length} submissions
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;">
+        ${submissions.map(s => {
+          const email = profileMap[s.user_id] || 'Unknown';
+          const date = new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          const avg = avgRating(s);
+          const avgColor = avg >= 4 ? 'var(--cyan)' : avg >= 3 ? 'var(--gold)' : '#ff6b6b';
+          const task = practiceTasks.find(t => t.id === s.task_id);
+          return `
+            <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.25rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+                <div style="display:flex;align-items:center;gap:0.75rem;">
+                  <span style="font-size:0.82rem;font-weight:600;">${email}</span>
+                  <span style="font-size:0.72rem;color:var(--text-dim);">${s.task_id}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:1rem;">
+                  <span style="font-size:1rem;font-weight:800;color:${avgColor};">★ ${avg}</span>
+                  <span style="font-size:0.72rem;color:var(--text-dim);">${date}</span>
+                </div>
+              </div>
+              ${task ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:0.75rem;padding:0.6rem 0.8rem;background:var(--bg3);border-radius:6px;border-left:2px solid var(--border);">"${task.prompt}"</div>` : ''}
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;margin-bottom:0.75rem;">
+                ${[
+                  { label: 'Helpfulness', val: s.helpfulness },
+                  { label: 'Accuracy', val: s.accuracy },
+                  { label: 'Format', val: s.format },
+                  { label: 'Instruction', val: s.instruction_following },
+                ].map(d => `
+                  <div style="background:var(--bg3);border-radius:6px;padding:0.5rem;text-align:center;">
+                    <div style="font-size:1rem;font-weight:700;color:${d.val >= 4 ? 'var(--cyan)' : d.val >= 3 ? 'var(--gold)' : '#ff6b6b'};">${d.val}</div>
+                    <div style="font-size:0.65rem;color:var(--text-dim);">${d.label}</div>
+                  </div>`).join('')}
+              </div>
+              <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;border-top:1px solid var(--border-w);padding-top:0.75rem;">
+                <span style="font-size:0.7rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;">Rationale: </span>
+                ${s.rationale}
+              </div>
+              ${s.time_spent_seconds ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:0.5rem;">⏱ ${Math.round(s.time_spent_seconds/60)}m ${s.time_spent_seconds%60}s spent</div>` : ''}
+            </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    console.error(e);
+    loading.textContent = 'Failed to load submissions. The task_submissions table may not exist yet — run the SQL in Supabase first.';
+    loading.style.color = '#ff6b6b';
+  }
+}
+
+function refreshSubmissions() { renderAdminSubmissions(); }
 
 // ════════════════════════════════
 // UTILS
