@@ -422,6 +422,31 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .profile-stat-label{font-size:0.68rem;color:var(--text-muted);margin-top:0.2rem;}
 .profile-badges-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0;}
 
+/* ── PRACTICE TASKS ── */
+.practice-wrap{display:flex;flex-direction:column;gap:1.5rem;}
+.practice-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
+.practice-counter{font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--text-muted);}
+.practice-progress{display:flex;gap:0.3rem;margin-bottom:1.5rem;}
+.practice-pip{width:24px;height:4px;border-radius:2px;background:var(--bg3);}
+.practice-pip.done{background:var(--cyan);}
+.practice-pip.active{background:var(--violet);}
+.task-card{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
+.task-section-label{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.5rem;}
+.task-prompt{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:1.25rem;line-height:1.6;}
+.task-response{background:var(--bg3);border-radius:8px;padding:1rem 1.25rem;font-size:0.9rem;line-height:1.75;color:var(--text-muted);white-space:pre-wrap;margin-bottom:1.5rem;border-left:3px solid rgba(0,229,200,0.3);}
+.rubric-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;}
+.rubric-item{background:var(--bg3);border-radius:8px;padding:0.9rem;}
+.rubric-label{font-size:0.78rem;font-weight:700;color:var(--cyan);margin-bottom:0.6rem;}
+.star-row{display:flex;gap:0.3rem;}
+.star{font-size:1.4rem;cursor:pointer;transition:transform 0.1s;opacity:0.3;user-select:none;}
+.star.active{opacity:1;}
+.star:hover{transform:scale(1.15);}
+.rationale-wrap{margin-bottom:1.25rem;}
+.rationale-wrap textarea{width:100%;min-height:90px;resize:vertical;}
+.task-nav{display:flex;gap:0.75rem;align-items:center;justify-content:flex-end;}
+.task-complete-banner{background:rgba(0,229,200,0.08);border:1px solid rgba(0,229,200,0.2);border-radius:10px;padding:2rem;text-align:center;}
+@media(max-width:600px){.rubric-grid{grid-template-columns:1fr;}}
+
 /* ── ANIMATIONS ── */
 .fade-in{opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .fade-in.visible{opacity:1;transform:translateY(0);}
@@ -886,6 +911,7 @@ const ADMIN_EMAILS = [
   'bloomjs@lafayette.edu',
   'lauren.mcdonald@learningcraftai.com',
   'lauren.mcdonald91190@gmail.com',
+  'ricky.n.quiroz@gmail.com',
 ];
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for legacy refs
 const ADMIN_PASS  = 'lcai2026@dmin';
@@ -1038,6 +1064,10 @@ let courses = [
       {
         id: 'l5', title: 'Knowledge Check', type: 'quiz',
         videoUrl: '', content: '', keyPoints: []
+      },
+      {
+        id: 'l6', title: 'Practice Tasks', type: 'practice',
+        videoUrl: '', content: 'Apply everything you have learned by evaluating real AI responses. Rate each response across four dimensions and provide your written rationale. Your evaluations are saved and contribute to real training data.', keyPoints: ['Take your time — quality over speed', 'Rate each dimension independently', 'Your rationale is the most valuable part']
       }
     ],
     quizzes: [
@@ -1620,7 +1650,7 @@ function renderLessonList() {
       <div class="lesson-num">${done?'✓':i+1}</div>
       <div class="lesson-info">
         <div class="lesson-title-sm">${l.title}</div>
-        <div class="lesson-type-tag">${l.type==='quiz'?'Knowledge Check':'Video Lesson'}</div>
+        <div class="lesson-type-tag">${l.type==='quiz'?'Knowledge Check':l.type==='practice'?'Practice Tasks':'Video Lesson'}</div>
       </div>
     </div>`;
   });
@@ -1651,6 +1681,17 @@ function loadLesson(idx) {
 
   if (lesson.type === 'quiz') {
     body.innerHTML = renderQuizHTML(course, idx);
+  } else if (lesson.type === 'practice') {
+    body.innerHTML = `
+      <div class="player-meta">
+        <div class="meta-chip"><span>⚡</span><span class="chip-val">+50 XP</span><span>per task</span></div>
+        <div class="meta-chip gold"><span>🗂️</span><span class="chip-val">8</span><span>tasks</span></div>
+      </div>
+      <div class="lesson-content" id="lesson-content">
+        <p style="color:var(--text-muted);">Loading tasks...</p>
+      </div>`;
+    taskState.currentIdx = 0;
+    renderPracticeLesson();
   } else {
     const isDemoLesson = course.id === 'course-demo';
     let videoHtml;
@@ -1945,7 +1986,7 @@ function completeLesson(idx) {
   if (!u.lessonsCompleted.includes(key)) {
     u.lessonsCompleted.push(key);
     saveProgressToSupabase(course.id, lesson.id);
-    if (lesson.type !== 'quiz') {
+    if (lesson.type !== 'quiz' && lesson.type !== 'practice') {
       addXP(50);
       spawnXPPop('+50 XP');
       const lessonNum = u.lessonsCompleted.filter(k => k.startsWith(course.id)).length;
@@ -2452,6 +2493,161 @@ function openProfile() {
     badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
   }
   document.getElementById('profile-modal').classList.add('open');
+}
+
+// ════════════════════════════════
+// PRACTICE TASKS
+// ════════════════════════════════
+let taskState = {
+  currentIdx: 0,
+  ratings: {}, // taskId -> { helpfulness, accuracy, format, instruction_following, rationale }
+  startTime: null
+};
+
+function renderPracticeLesson() {
+  const container = document.getElementById('lesson-content');
+  if (!container) return;
+  taskState.startTime = Date.now();
+  renderTaskUI(container);
+}
+
+function renderTaskUI(container) {
+  const idx = taskState.currentIdx;
+  const task = practiceTasks[idx];
+  const total = practiceTasks.length;
+  const saved = taskState.ratings[task.id] || {};
+  const allDone = Object.keys(taskState.ratings).length >= total;
+
+  if (allDone) {
+    container.innerHTML = `
+      <div class="task-complete-banner">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem;">🎉</div>
+        <h3 style="font-size:1.2rem;font-weight:800;margin-bottom:0.5rem;">All tasks complete!</h3>
+        <p style="color:var(--text-muted);font-size:0.92rem;margin-bottom:1.5rem;">Your evaluations have been saved. Thank you for contributing to real AI training data.</p>
+        <button class="btn btn-primary" onclick="completeLesson(${appState.currentCourse.lessons.findIndex(l=>l.type==='practice')})">Finish Course <span class="arrow">→</span></button>
+      </div>`;
+    return;
+  }
+
+  const pips = practiceTasks.map((t, i) => {
+    const done = taskState.ratings[t.id];
+    const active = i === idx && !done;
+    return `<div class="practice-pip ${done ? 'done' : active ? 'active' : ''}"></div>`;
+  }).join('');
+
+  const dims = [
+    { key: 'helpfulness', label: 'Helpfulness' },
+    { key: 'accuracy', label: 'Accuracy' },
+    { key: 'format', label: 'Format / Structure' },
+    { key: 'instruction_following', label: 'Instruction Following' }
+  ];
+
+  const rubricHtml = dims.map(d => `
+    <div class="rubric-item">
+      <div class="rubric-label">${d.label}</div>
+      <div class="star-row" id="stars-${d.key}">
+        ${[1,2,3,4,5].map(n => `<span class="star ${(saved[d.key]||0)>=n?'active':''}" onclick="setRating('${task.id}','${d.key}',${n})" data-val="${n}">★</span>`).join('')}
+      </div>
+    </div>`).join('');
+
+  container.innerHTML = `
+    <div class="practice-wrap">
+      <div class="practice-header">
+        <span style="font-size:0.85rem;font-weight:700;color:var(--cyan);">Practice Tasks</span>
+        <span class="practice-counter">Task ${idx + 1} of ${total}</span>
+      </div>
+      <div class="practice-progress">${pips}</div>
+
+      <div class="task-card">
+        <div class="task-section-label">Prompt</div>
+        <div class="task-prompt">${task.prompt}</div>
+        <div class="task-section-label">AI Response</div>
+        <div class="task-response">${task.response}</div>
+
+        <div class="task-section-label" style="margin-bottom:0.75rem;">Rate this response</div>
+        <div class="rubric-grid">${rubricHtml}</div>
+
+        <div class="rationale-wrap">
+          <div class="task-section-label">Written Rationale <span style="color:#ff6b6b;">*</span></div>
+          <textarea id="task-rationale" placeholder="Explain your ratings. What did the response do well? What was missing or inaccurate?" style="margin-top:0.4rem;">${saved.rationale||''}</textarea>
+        </div>
+
+        <div id="task-error" style="font-size:0.8rem;color:#ff6b6b;margin-bottom:0.75rem;display:none;">Please rate all dimensions and provide a rationale before submitting.</div>
+
+        <div class="task-nav">
+          ${idx > 0 ? `<button class="btn btn-ghost btn-sm" onclick="taskNav(${idx-1})">← Previous</button>` : ''}
+          <button class="btn btn-primary" onclick="submitTask('${task.id}')">
+            ${idx < total - 1 ? 'Submit & Next →' : 'Submit Final Task →'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function setRating(taskId, dimension, value) {
+  if (!taskState.ratings[taskId]) taskState.ratings[taskId] = {};
+  taskState.ratings[taskId][dimension] = value;
+  // Update stars visually
+  const row = document.getElementById('stars-' + dimension);
+  if (!row) return;
+  row.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.val) <= value);
+  });
+}
+
+function taskNav(idx) {
+  taskState.currentIdx = idx;
+  renderTaskUI(document.getElementById('lesson-content'));
+}
+
+async function submitTask(taskId) {
+  const ratings = taskState.ratings[taskId] || {};
+  const rationale = document.getElementById('task-rationale')?.value.trim();
+  const dims = ['helpfulness', 'accuracy', 'format', 'instruction_following'];
+  const errEl = document.getElementById('task-error');
+
+  // Validate all dims rated
+  const allRated = dims.every(d => ratings[d]);
+  if (!allRated || !rationale) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Save rationale
+  taskState.ratings[taskId].rationale = rationale;
+
+  // Save to Supabase
+  const u = appState.user;
+  if (u && u.supabaseId && !appState.isDemo) {
+    const timeSpent = Math.round((Date.now() - taskState.startTime) / 1000);
+    try {
+      await _supabase.from('task_submissions').upsert({
+        user_id: u.supabaseId,
+        task_id: taskId,
+        course_id: 'course-3',
+        helpfulness: ratings.helpfulness,
+        accuracy: ratings.accuracy,
+        format: ratings.format,
+        instruction_following: ratings.instruction_following,
+        rationale: rationale,
+        time_spent_seconds: timeSpent,
+        created_at: new Date().toISOString()
+      }, { onConflict: 'user_id,task_id' });
+    } catch(e) { console.warn('Task save failed', e); }
+  }
+
+  // Advance
+  addXP(50);
+  spawnXPPop('+50 XP');
+  showToast('success', '✓', 'Task submitted! Great work.');
+
+  const nextUndone = practiceTasks.findIndex((t, i) => i > taskState.currentIdx && !taskState.ratings[t.id]);
+  taskState.currentIdx = nextUndone >= 0 ? nextUndone : taskState.currentIdx + 1;
+  if (taskState.currentIdx >= practiceTasks.length) taskState.currentIdx = practiceTasks.length - 1;
+
+  taskState.startTime = Date.now();
+  renderTaskUI(document.getElementById('lesson-content'));
 }
 
 // ════════════════════════════════
