@@ -1,0 +1,247 @@
+# Learning Craft AI — Session Handoff
+## Date: March 27, 2026
+
+---
+
+## PLATFORM STATUS: FULLY WORKING
+Push always by downloading the file from Claude outputs — never copy-paste code. Copy-pasting introduces apostrophe syntax errors that break the JS parser.
+
+---
+
+## WHAT WAS BUILT THIS SESSION
+
+### 1. Course Content — All 3 Courses Fully Written
+
+**Course 1: Intro to AI Training Platforms** (6 lessons + 5 quiz questions)
+- L1: What Is a Language Model?
+- L2: How AI Models Learn: RLHF Explained
+- L3: The AI Training Pipeline: Who Does What
+- L4: Types of Contributor Tasks
+- L5: What Platforms Expect: Quality, Consistency, and Calibration
+- L6: Knowledge Check (5 questions)
+
+**Course 2: Intro to Model Evaluation** (7 lessons + 6 quiz questions)
+- L1: What Makes a Response Good? The Four Dimensions
+- L2: Reading a Rubric: Anchors, Scales, and Descriptors
+- L3: Instruction Following: The Most Underrated Dimension
+- L4: Writing a Good Rationale
+- L5: Common Mistakes New Evaluators Make
+- L6: Calibration in Practice: Matching the Standard
+- L7: Knowledge Check (6 questions)
+
+**Course 3: Tasking Fundamentals** (7 lessons + 5 quiz questions + 8 practice tasks)
+- L1: Task Type 1: Single Response Rating
+- L2: Task Type 2: Comparative Preference
+- L3: Task Type 3: Error Classification
+- L4: Edge Cases and When to Escalate
+- L5: Professional Standards and Platform Expectations
+- L6: Knowledge Check (5 questions)
+- L7: Practice Tasks (8 real evaluation tasks — see below)
+
+All content was written from an instructional design perspective using ADDIE methodology, targeting someone with zero AI experience who needs to be platform-ready after completing the series.
+
+---
+
+### 2. Practice Tasks — Course 3 (Real Data Collection)
+
+8 tasks across 3 types saved to `task_submissions` table in Supabase:
+
+**Single Response Rating (tasks 1-4):**
+- Task 1: Explain machine learning to a beginner (good response — should score high)
+- Task 2: 3 cybersecurity steps (bad response — answers wrong question, should score low on helpfulness/instruction following)
+- Task 3: Two-sentence internet summary (good response, check sentence count)
+- Task 4: Scrambled egg recipe (bad response — no recipe provided at all)
+
+**Comparative Preference (tasks 5-6):**
+- Task 5: Black hole explanation for a 10-year-old (A = technical, B = kid-friendly — B should win)
+- Task 6: Heart attack response (A = actionable emergency steps, B = medical textbook — A should win, safety-critical)
+
+**Error Classification (tasks 7-8):**
+- Task 7: Moon landing question (contains factual error — second moon landing was NOT December 1969, it was November 1969 Apollo 12)
+- Task 8: Haiku about autumn (format error — wrote a paragraph, not a haiku)
+
+**Supabase columns needed for full task data (run if not done):**
+```sql
+ALTER TABLE task_submissions 
+ADD COLUMN IF NOT EXISTS task_type TEXT DEFAULT 'rating',
+ADD COLUMN IF NOT EXISTS preference TEXT,
+ADD COLUMN IF NOT EXISTS error_types TEXT;
+```
+
+---
+
+### 3. Slide Decks Built for HeyGen Recording
+
+Three PPTX files — one per course. Each lesson has a divider slide so Lauren knows exactly where she is in HeyGen. Speaker notes = the spoken script Lauren reads.
+
+**Files in Claude outputs:**
+- `lcai-course1-slides.pptx` — 23 slides, 5 lessons
+- `lcai-course2-slides.pptx` — 28 slides, 6 lessons
+- `lcai-course3-slides.pptx` — 26 slides, 5 lessons
+
+**Design:** Dark theme (matches platform), cyan/violet/gold accent system, Arial Black headings, Trebuchet MS body. Course 1 = cyan accent, Course 2 = violet accent, Course 3 = gold accent.
+
+**Recording workflow:**
+1. Upload each deck to HeyGen
+2. Record lesson by lesson using speaker notes as script (read the notes, not the slides)
+3. Upload finished videos to Vimeo
+4. Send embed URLs back to Claude — one URL per lesson
+5. Claude will drop them into courses.html videoUrl fields
+
+**Lesson URL placement in code — videoUrl fields:**
+- Course 1: lessons l1-l5 (l6 is quiz, no video)
+- Course 2: lessons l1-l6 (l7 is quiz, no video)
+- Course 3: lessons l1-l5 (l6 is quiz, l7 is practice tasks — no video)
+- Total: 16 video lessons to record
+
+---
+
+### 4. Platform Features Added This Session
+
+**Student-facing:**
+- Profile modal with 3 tabs: Stats, Edit Profile, Password
+  - `saveProfileName()` — updates Supabase profiles.full_name + auth metadata
+  - `savePassword()` — updates via Supabase auth
+- Practice tasks now support 3 task types: rating, comparison, error classification
+- Comparison task UI: side-by-side responses, A/B/Equal buttons
+- Error classification UI: checkboxes for 6 error types
+
+**Admin-facing:**
+- Impersonate Student: 👁 View button on each student row
+  - Loads their real dashboard with actual XP/progress from Supabase
+  - Gold banner at top: "Admin View — Viewing as [Name]"
+  - "← Back to Admin" button returns to Students tab
+- Students tab now shows full_name from profiles (not email-derived)
+- Leaderboard uses `formatLeaderboardName()` — "First L." format for privacy
+
+**Infrastructure:**
+- `loadLeaderboard()` function — pulls real data from Supabase user_xp + profiles
+- Fake leaderboard names removed entirely
+- Empty leaderboard state handled gracefully
+- `full_name` saved to profiles on every login and registration
+- `isImpersonating` flag in appState prevents fake data saves during admin viewing
+
+---
+
+### 5. Bugs Fixed This Session
+
+1. **Double showToast infinite loop** — second `showToast` declaration was calling itself recursively, crashing the JS parser before any functions loaded. Fixed by merging notification logic into single `showToast` function.
+
+2. **Apostrophe syntax errors** — unescaped apostrophes in single-quoted JS strings (`contributor's`, `QA'd`, `last month's`) broke the parser. Fixed by escaping with backslash. Root cause: always download the file, never copy-paste.
+
+3. **Fake leaderboard data** — removed hardcoded fake names (Alex M., Jordan R., etc.), replaced with real Supabase data.
+
+4. **Student names showing as email prefixes** — fixed by adding `full_name` to the profiles SELECT query in `renderAdminStudents()`.
+
+---
+
+### 6. Supabase State
+
+**Tables in use:**
+- `profiles` — id, email, full_name, role, created_at
+- `user_xp` — user_id, xp, level, streak, last_active
+- `course_progress` — user_id, course_id, lesson_id, completed, completed_at
+- `task_submissions` — user_id, task_id, course_id, task_type, helpfulness, accuracy, format, instruction_following, preference, error_types, rationale, time_spent_seconds, created_at
+
+**RLS:** Authenticated users can read all profiles (policy added previously)
+
+**Admin emails with access:**
+- admin@learningcraftai.com
+- arpmcdonald86@gmail.com
+- bloomjs@lafayette.edu
+- lauren.mcdonald@learningcraftai.com
+- lauren.mcdonald91190@gmail.com
+- ricky.n.quiroz@gmail.com
+- All use password: `lcai2026@dmin`
+
+**Other credentials:**
+- Demo: demo@learningcraftai.com / lcaidemo2026
+- Pilot code: LCPILOT2026
+- Waitlist form: https://formspree.io/f/mnjoagzj
+
+**Supabase URL:** https://eayhhviiyxyarjxnjndi.supabase.co
+
+---
+
+### 7. Business Strategy Discussed
+
+**Series branding:** "AI Evaluation Foundations Series" — 3-course credential series, currently free for pilot, will become paid ($47-97) after pilot.
+
+**Badges planned (not yet built in code):**
+- 🤖 Platform Ready — complete Course 1
+- 📋 Evaluation Certified — complete Course 2
+- 🎯 Tasking Certified — complete Course 3
+- 🏅 AI Contributor: Foundations — complete all 3 (main credential)
+- ⭐ Top Rater — high avg quality score on practice tasks
+- 🎯 Sharp Eye — all error classification tasks correct
+- ⚖️ Well Calibrated — ratings aligned with benchmarks
+- ✍️ Strong Rationale — detailed rationales above min word count
+
+**Legal:** Can use "certified" — private company credentialing is legal, not misrepresenting accreditation. T&Cs still need to be written and added (checkbox on Create Account screen).
+
+**T&Cs to cover:**
+- Data usage — practice task submissions become training data
+- No refunds on paid courses
+- Content ownership — Lauren owns all course content
+- Code of conduct
+
+**Mercor (Owen Wu) — PENDING:**
+- He reached out about data licensing
+- Course 3 practice tasks produce exactly the structured evaluation data Mercor wants
+- Response and call not yet scheduled
+- This is a high-priority B2B lead
+
+---
+
+## PENDING — DO NEXT
+
+**Immediate:**
+- [ ] Record HeyGen videos using the 3 slide decks
+- [ ] Upload to Vimeo, send embed URLs back to Claude
+- [ ] Run Supabase SQL for task_submissions new columns (if not done)
+- [ ] Respond to Owen at Mercor, schedule call
+
+**Soon:**
+- [ ] Write T&Cs and add checkbox to Create Account screen
+- [ ] Build series credential badges (the 8 badges listed above)
+- [ ] Split slide decks into individual lesson files (one deck per lesson) — do in fresh conversation
+- [ ] Build course rating (1-5 stars + feedback) at end of each course
+- [ ] Password reset email template (branded)
+- [ ] Testimonials tab on main site
+
+**Not Urgent:**
+- [ ] OG image (1200×630px) for social sharing
+- [ ] Pricing page
+- [ ] Google/Facebook OAuth
+- [ ] Course ratings/feedback saved to Supabase
+
+---
+
+## FILES
+
+**Canonical platform file:** `/mnt/user-data/outputs/courses.html`
+Always download this file from Claude outputs — never copy-paste. Push to GitHub → `courses-learning-craft-ai` repo → `courses.learningcraftai.com`
+
+**Slide decks:** `/mnt/user-data/outputs/`
+- `lcai-course1-slides.pptx`
+- `lcai-course2-slides.pptx`
+- `lcai-course3-slides.pptx`
+
+**Repos:**
+- Marketing site: `learning-craft-ai-site` → `learningcraftai.com`
+- Course platform: `courses-learning-craft-ai` → `courses.learningcraftai.com`
+- Both on GitHub under `laurenmcdonald91190-stack`, Vercel auto-deploy
+- DNS on Squarespace
+
+---
+
+## TECHNICAL NOTES FOR NEXT CLAUDE
+
+- courses.html is a single-file HTML app — all CSS, HTML, JS in one file
+- Course content is hardcoded in the `courses` JS array — admin builder is demo-only
+- When editing: always download from outputs, edit programmatically with Python str.replace, re-upload
+- Never copy-paste large code blocks — apostrophes in single-quoted strings will break the parser
+- The `practiceTasks` array must stay in sync with what's in Supabase task_submissions
+- `formatLeaderboardName()` handles "First L." display — admin Students tab shows full name
+- `isImpersonating` flag must be checked before any Supabase writes (already done in submitTask)
+- Video URLs go in each lesson's `videoUrl: ''` field — HeyGen/Vimeo URLs work via getEmbedHTML()
