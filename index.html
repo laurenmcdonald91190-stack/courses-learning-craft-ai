@@ -1237,14 +1237,8 @@ const demoCourse = {
   ]
 };
 
-// Mock leaderboard data
-let leaderboard = [
-  { name: 'Alex M.', xp: 2840, level: 8, avatar: 'AM', color: '#00e5c8' },
-  { name: 'Jordan R.', xp: 2210, level: 7, avatar: 'JR', color: '#9b5de5' },
-  { name: 'Sam T.', xp: 1950, level: 6, avatar: 'ST', color: '#f5c842' },
-  { name: 'Casey L.', xp: 1740, level: 5, avatar: 'CL', color: '#00e5c8' },
-  { name: 'Morgan P.', xp: 1320, level: 4, avatar: 'MP', color: '#9b5de5' },
-];
+// Leaderboard — loaded from Supabase, no fake data
+let leaderboard = [];
 
 const allBadges = [
   { id: 'first-lesson', icon: '🎬', name: 'First Lesson', desc: 'Complete your first lesson', xpReq: 0, lessonReq: 1 },
@@ -1467,11 +1461,35 @@ function ensureAdminTabs() {
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
 
-function loginUser(user) {
+async function loadLeaderboard() {
+  try {
+    const { data: xpData } = await _supabase.from('user_xp').select('user_id, xp, level').order('xp', { ascending: false }).limit(20);
+    const { data: profiles } = await _supabase.from('profiles').select('id, full_name, email');
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p; });
+    const avatarColors = ['#00e5c8','#9b5de5','#f5c842','#ff6b9d','#00d4ff'];
+    leaderboard = (xpData || []).map((x, i) => {
+      const profile = profileMap[x.user_id];
+      const name = profile?.full_name || (profile?.email ? profile.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() : 'Learner');
+      const isYou = appState.user && appState.user.supabaseId === x.user_id;
+      return { name, xp: x.xp, level: x.level, avatar: name.slice(0,2).toUpperCase(), color: avatarColors[i % avatarColors.length], isYou };
+    });
+    // Ensure current user appears even if outside top 20
+    if (appState.user && appState.user.supabaseId && !leaderboard.find(l => l.isYou)) {
+      leaderboard.push({ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+    }
+  } catch(e) {
+    console.warn('Leaderboard load failed', e);
+    if (appState.user) {
+      leaderboard = [{ name: appState.user.name, xp: appState.user.xp, level: appState.user.level, avatar: appState.user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true }];
+    }
+  }
+}
+
+async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
-  // Add user to leaderboard
-  leaderboard.push({ name: user.name, xp: user.xp, level: user.level, avatar: user.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+  await loadLeaderboard();
   showView('view-app');
   renderApp();
   navigateAfterLogin();
@@ -1482,6 +1500,7 @@ function handleLogout() {
   appState.user = null;
   appState.isAdmin = false;
   appState.isDemo = false;
+  leaderboard = [];
   try {
     localStorage.removeItem('lcai_session_type');
     localStorage.removeItem('lcai_session_email');
@@ -1673,6 +1692,10 @@ function renderLeaderboardMini() {
   const container = document.getElementById('dashboard-lb');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp).slice(0,5);
+  if (!sorted.length) {
+    container.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners yet — be the first on the board!</div>';
+    return;
+  }
   container.innerHTML = sorted.map((l,i) => `
     <div class="lb-row ${l.isYou?'you':''}">
       <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
@@ -1687,6 +1710,10 @@ function renderLeaderboardFull() {
   const container = document.getElementById('lb-full-list');
   if (!container) return;
   const sorted = [...leaderboard].sort((a,b)=>b.xp-a.xp);
+  if (!sorted.length) {
+    container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.85rem;">No learners on the leaderboard yet. Complete lessons to earn XP and appear here!</div>';
+    return;
+  }
   container.innerHTML = `
     <div class="lb-full-row header">
       <div>Rank</div><div></div><div>Name</div><div>Level</div><div>XP</div>
@@ -3115,7 +3142,7 @@ window.addEventListener('load', async () => {
       // loginUser handles showView + renderApp, then restore last page
       appState.user = userData;
       appState.isAdmin = false;
-      leaderboard.push({ name: userData.name, xp: userData.xp, level: userData.level, avatar: userData.name.slice(0,2).toUpperCase(), color: '#00e5c8', isYou: true });
+      await loadLeaderboard();
       showView('view-app');
       renderApp();
       navTo(lastPage);
