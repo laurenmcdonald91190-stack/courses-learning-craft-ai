@@ -612,6 +612,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <!-- Main content -->
     <main class="main-content" id="main-content">
       <!-- Demo mode banner -->
+      <div id="impersonate-banner" style="display:none;align-items:center;gap:1rem;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);border-radius:8px;padding:0.75rem 1.2rem;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <span style="font-size:1.1rem;">👁️</span>
+        <div style="flex:1;min-width:200px;">
+          <span style="font-weight:600;color:var(--gold);font-size:0.9rem;">Admin View</span>
+          <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">Viewing as <strong id="impersonate-name" style="color:var(--gold);">—</strong></span>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(245,200,66,0.15);color:var(--gold);border:1px solid rgba(245,200,66,0.4);white-space:nowrap;" onclick="exitImpersonate()">← Back to Admin</button>
+      </div>
       <div id="demo-banner" style="display:none;align-items:center;gap:1rem;background:rgba(155,93,229,0.12);border:1px solid rgba(155,93,229,0.3);border-radius:8px;padding:0.75rem 1.2rem;margin-bottom:1.25rem;flex-wrap:wrap;">
         <span style="font-size:1.1rem;">🧪</span>
         <div style="flex:1;min-width:200px;">
@@ -997,6 +1005,8 @@ let appState = {
   user: null,
   isAdmin: false,
   isDemo: false,
+  isImpersonating: false,
+  prevAdminState: null,
   currentCourse: null,
   currentLessonIdx: 0,
   quizAnswered: {},
@@ -1585,8 +1595,11 @@ function renderApp() {
   // Demo mode UI
   const demoBanner = document.getElementById('demo-banner');
   const demoAdminLink = document.getElementById('demo-admin-link');
+  const impersonateBanner = document.getElementById('impersonate-banner');
   if (demoBanner) demoBanner.style.display = appState.isDemo ? 'flex' : 'none';
   if (demoAdminLink) demoAdminLink.style.display = appState.isDemo ? 'block' : 'none';
+  if (impersonateBanner) impersonateBanner.style.display = appState.isImpersonating ? 'flex' : 'none';
+  if (appState.isImpersonating) document.getElementById('impersonate-name').textContent = appState.user.name;
   updateXPBar();
   renderDashboard();
   initFadeIns();
@@ -2504,8 +2517,8 @@ async function renderAdminStudents() {
         ${students.length} students · ${admins.length} admins · ${finalProfiles.length} total accounts
       </div>
       <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;overflow:hidden;">
-        <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.75rem 1.2rem;background:var(--bg3);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);">
-          <div>Name</div><div>Email</div><div>Level</div><div>XP</div><div>Lessons</div><div>Joined</div>
+        <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px 60px;gap:1rem;padding:0.75rem 1.2rem;background:var(--bg3);font-size:0.68rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);">
+          <div>Name</div><div>Email</div><div>Level</div><div>XP</div><div>Lessons</div><div>Joined</div><div></div>
         </div>
         ${finalProfiles.map(p => {
           const xp = xpMap[p.id] || { xp: 0, level: 1 };
@@ -2514,13 +2527,14 @@ async function renderAdminStudents() {
           const displayName = p.full_name || p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
           const isAdmin = ADMIN_EMAILS.includes(p.email.toLowerCase());
           return `
-            <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.85rem 1.2rem;border-top:1px solid var(--border-w);align-items:center;transition:background 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+            <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px 60px;gap:1rem;padding:0.85rem 1.2rem;border-top:1px solid var(--border-w);align-items:center;transition:background 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
               <div style="font-size:0.88rem;font-weight:500;">${displayName} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.email}</div>
               <div style="font-size:0.82rem;color:var(--violet);">Lv ${xp.level}</div>
               <div style="font-size:0.82rem;color:var(--cyan);">${xp.xp}</div>
               <div style="font-size:0.82rem;color:var(--text-muted);">${lessons}</div>
               <div style="font-size:0.78rem;color:var(--text-dim);">${joined}</div>
+              <div><button class="btn btn-ghost btn-sm" onclick="impersonateStudent('${p.id}','${p.full_name || p.email.split('@')[0]}','${p.email}',${xp.xp},${xp.level},${xp.streak || 1},${lessons})" style="font-size:0.72rem;padding:0.3rem 0.7rem;">👁 View</button></div>
             </div>`;
         }).join('')}
       </div>`;
@@ -2532,6 +2546,51 @@ async function renderAdminStudents() {
 }
 
 function refreshStudents() { renderAdminStudents(); }
+
+async function impersonateStudent(uid, name, email, xp, level, streak, lessons) {
+  // Load their real progress from Supabase
+  try {
+    const { data: progressData } = await _supabase.from('course_progress').select('course_id,lesson_id').eq('user_id', uid).eq('completed', true);
+    const lessonsCompleted = (progressData || []).map(r => r.course_id + '-' + r.lesson_id);
+    // Store admin session so we can return
+    appState.prevAdminState = { isAdmin: true, user: appState.user };
+    // Set up spoofed user state
+    appState.user = {
+      name, email,
+      supabaseId: uid,
+      xp, level, streak,
+      lessonsCompleted,
+      correctAnswers: 0,
+      badges: []
+    };
+    appState.isAdmin = false;
+    appState.isImpersonating = true;
+    await loadLeaderboard();
+    showView('view-app');
+    renderApp();
+    navTo('dashboard');
+    // Show impersonate banner
+    const banner = document.getElementById('impersonate-banner');
+    if (banner) { banner.style.display = 'flex'; }
+    document.getElementById('impersonate-name').textContent = name;
+  } catch(e) {
+    showToast('error', '⚠', 'Failed to load student data.');
+    console.error(e);
+  }
+}
+
+function exitImpersonate() {
+  appState.isImpersonating = false;
+  appState.user = appState.prevAdminState?.user || { name: 'Admin', email: ADMIN_EMAIL };
+  appState.isAdmin = true;
+  appState.prevAdminState = null;
+  const banner = document.getElementById('impersonate-banner');
+  if (banner) banner.style.display = 'none';
+  ensureAdminTabs();
+  showView('view-admin');
+  renderAdminCourses();
+  adminNavTo('students');
+}
 
 async function renderAdminStats() {
   const loading = document.getElementById('admin-stats-loading');
