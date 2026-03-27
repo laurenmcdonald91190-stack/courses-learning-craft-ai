@@ -422,6 +422,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .profile-stat-label{font-size:0.68rem;color:var(--text-muted);margin-top:0.2rem;}
 .profile-badges-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0;}
 
+/* ── PROFILE TABS ── */
+.profile-tabs{display:flex;gap:0;border:1px solid var(--border-w);border-radius:6px;margin-bottom:1.5rem;overflow:hidden;}
+.profile-tab{flex:1;padding:0.5rem;font-size:0.8rem;font-weight:500;text-align:center;cursor:pointer;background:transparent;border:none;color:var(--text-muted);transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.profile-tab.active{background:rgba(0,229,200,0.1);color:var(--cyan);}
+.profile-section{display:none;}
+.profile-section.active{display:block;}
+.profile-edit-field{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;text-align:left;}
+.profile-edit-field label{font-family:'DM Sans',sans-serif;font-size:0.7rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);}
+.profile-edit-field input{background:var(--bg);border:1px solid var(--border-w);border-radius:5px;padding:0.65rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;width:100%;}
+.profile-edit-field input:focus{border-color:rgba(0,229,200,0.4);}
+.profile-msg{font-size:0.8rem;margin-top:0.5rem;display:none;text-align:left;}
+.profile-msg.success{color:var(--cyan);}
+.profile-msg.error{color:#ff6b6b;}
+
 /* ── PRACTICE TASKS ── */
 .practice-wrap{display:flex;flex-direction:column;gap:1.5rem;}
 .practice-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;}
@@ -844,22 +858,55 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <!-- ── PROFILE MODAL ── -->
 <div class="modal-overlay" id="profile-modal" onclick="closeModal('profile-modal')">
-  <div class="modal" onclick="event.stopPropagation()">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:500px;">
     <span class="modal-close" onclick="closeModal('profile-modal')">✕</span>
     <div class="profile-modal-inner">
       <div class="profile-avatar-lg" id="profile-avatar-lg">—</div>
       <div style="font-size:1.1rem;font-weight:700;margin-bottom:0.25rem;" id="profile-name">—</div>
       <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;" id="profile-email">—</div>
-      <div style="font-size:0.78rem;color:var(--violet);" id="profile-level">Level 1</div>
-      <div class="profile-stat-row">
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
+      <div style="font-size:0.78rem;color:var(--violet);margin-bottom:1.25rem;" id="profile-level">Level 1</div>
+      <div class="profile-tabs">
+        <button class="profile-tab active" onclick="switchProfileTab('stats')">Stats</button>
+        <button class="profile-tab" onclick="switchProfileTab('edit')">Edit Profile</button>
+        <button class="profile-tab" onclick="switchProfileTab('password')">Password</button>
       </div>
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
-      <div class="profile-badges-row" id="profile-badges"></div>
-      <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
-        <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
+      <!-- Stats tab -->
+      <div class="profile-section active" id="profile-tab-stats">
+        <div class="profile-stat-row">
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-xp">0</div><div class="profile-stat-label">Total XP</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-lessons">0</div><div class="profile-stat-label">Lessons Done</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="profile-streak">1</div><div class="profile-stat-label">Day Streak</div></div>
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;text-align:left;">Badges Earned</div>
+        <div class="profile-badges-row" id="profile-badges"></div>
+        <div style="margin-top:1.25rem;display:flex;gap:0.75rem;justify-content:center;">
+          <button class="btn btn-ghost btn-sm" onclick="closeModal('profile-modal');handleLogout()">Sign Out</button>
+        </div>
+      </div>
+      <!-- Edit Profile tab -->
+      <div class="profile-section" id="profile-tab-edit">
+        <div class="profile-edit-field">
+          <label>Display Name</label>
+          <input type="text" id="edit-name" placeholder="Your full name">
+        </div>
+        <div id="edit-name-msg" class="profile-msg"></div>
+        <button class="btn btn-primary btn-full" onclick="saveProfileName()" style="margin-top:0.5rem;">Save Name</button>
+      </div>
+      <!-- Password tab -->
+      <div class="profile-section" id="profile-tab-password">
+        <div class="profile-edit-field">
+          <label>New Password</label>
+          <div style="position:relative;">
+            <input type="password" id="new-password" placeholder="At least 6 characters" style="padding-right:2.8rem;">
+            <span onclick="togglePw('new-password',this)" style="position:absolute;right:0.9rem;top:50%;transform:translateY(-50%);cursor:pointer;font-size:0.8rem;color:var(--text-muted);user-select:none;">Show</span>
+          </div>
+        </div>
+        <div class="profile-edit-field">
+          <label>Confirm New Password</label>
+          <input type="password" id="confirm-password" placeholder="Repeat password">
+        </div>
+        <div id="edit-password-msg" class="profile-msg"></div>
+        <button class="btn btn-primary btn-full" onclick="savePassword()" style="margin-top:0.5rem;">Update Password</button>
       </div>
     </div>
   </div>
@@ -1275,7 +1322,7 @@ async function loadSupabaseProfile(uid, name, email) {
     const { data: progressData } = await _supabase.from('course_progress').select('course_id,lesson_id').eq('user_id', uid).eq('completed', true);
     const lessonsCompleted = (progressData || []).map(r => r.course_id + '-' + r.lesson_id);
     // Ensure profile exists
-    await _supabase.from('profiles').upsert({ id: uid, email, role: 'student' });
+    await _supabase.from('profiles').upsert({ id: uid, email, full_name: name, role: 'student' });
     return {
       name, email,
       supabaseId: uid,
@@ -1360,7 +1407,7 @@ async function handleRegister() {
       return;
     }
     // Auto-confirmed — create profile and log in
-    await _supabase.from('profiles').upsert({ id: data.user.id, email, role: 'student' });
+    await _supabase.from('profiles').upsert({ id: data.user.id, email, full_name: name, role: 'student' });
     loginUser({ name, email, xp: 0, lessonsCompleted: [], correctAnswers: 0, streak: 1, badges: [], level: 1, supabaseId: data.user.id });
   } catch(e) {
     showAuthError('reg-error', 'Something went wrong. Please try again.');
@@ -1616,6 +1663,12 @@ function renderAllBadges() {
   renderBadges('all-badges', false);
 }
 
+function formatLeaderboardName(name) {
+  const parts = (name || '').trim().split(' ').filter(Boolean);
+  if (parts.length === 1) return parts[0];
+  return parts[0] + ' ' + parts[parts.length - 1].charAt(0) + '.';
+}
+
 function renderLeaderboardMini() {
   const container = document.getElementById('dashboard-lb');
   if (!container) return;
@@ -1624,7 +1677,7 @@ function renderLeaderboardMini() {
     <div class="lb-row ${l.isYou?'you':''}">
       <div class="lb-rank ${i<3?'top':''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
       <div class="lb-avatar" style="background:${l.color};color:#080b10;">${l.avatar}</div>
-      <div class="lb-name">${l.name}${l.isYou?' (You)':''}</div>
+      <div class="lb-name">${formatLeaderboardName(l.name)}${l.isYou?' (You)':''}</div>
       <div class="lb-xp">${l.xp} XP</div>
     </div>
   `).join('');
@@ -1642,7 +1695,7 @@ function renderLeaderboardFull() {
     <div class="lb-full-row ${l.isYou?'you':''}">
       <div class="lb-medal">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
       <div class="lb-avatar" style="background:${l.color};color:#080b10;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.72rem;">${l.avatar}</div>
-      <div>${l.name}${l.isYou?' <span style="color:var(--cyan);font-size:0.75rem;">(You)</span>':''}</div>
+      <div>${formatLeaderboardName(l.name)}${l.isYou?' <span style="color:var(--cyan);font-size:0.75rem;">(You)</span>':''}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:0.8rem;color:var(--violet);">Lv ${l.level||1}</div>
       <div style="font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--cyan);">${l.xp}</div>
     </div>
@@ -2382,7 +2435,7 @@ async function renderAdminStudents() {
     // Get all profiles — no role filter so RLS doesn't block
     const { data: profiles, error } = await _supabase
       .from('profiles')
-      .select('id, email, role, created_at')
+      .select('id, email, full_name, role, created_at')
       .order('created_at', { ascending: false });
 
     // If RLS blocks this, fall back to user_xp table which has less restriction
@@ -2390,7 +2443,7 @@ async function renderAdminStudents() {
     if (error || !profiles || !profiles.length) {
       const { data: xpFallback } = await _supabase.from('user_xp').select('user_id, xp, level, streak, last_active');
       if (xpFallback && xpFallback.length) {
-        finalProfiles = xpFallback.map(x => ({ id: x.user_id, email: 'user-' + x.user_id.slice(0,8), role: 'student', created_at: x.last_active }));
+        finalProfiles = xpFallback.map(x => ({ id: x.user_id, email: 'user-' + x.user_id.slice(0,8), full_name: null, role: 'student', created_at: x.last_active }));
       } else if (error) {
         throw error;
       }
@@ -2431,11 +2484,11 @@ async function renderAdminStudents() {
           const xp = xpMap[p.id] || { xp: 0, level: 1 };
           const lessons = progressMap[p.id] || 0;
           const joined = new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          const nameFromEmail = p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
+          const displayName = p.full_name || p.email.split('@')[0].replace(/[^a-zA-Z]/g,' ').trim();
           const isAdmin = ADMIN_EMAILS.includes(p.email.toLowerCase());
           return `
             <div style="display:grid;grid-template-columns:1.5fr 1.8fr 80px 60px 80px 100px;gap:1rem;padding:0.85rem 1.2rem;border-top:1px solid var(--border-w);align-items:center;transition:background 0.18s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
-              <div style="font-size:0.88rem;font-weight:500;">${nameFromEmail} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
+              <div style="font-size:0.88rem;font-weight:500;">${displayName} ${isAdmin ? '<span style="font-size:0.65rem;color:var(--gold);border:1px solid rgba(245,200,66,0.3);padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.3rem;">ADMIN</span>' : ''}</div>
               <div style="font-size:0.8rem;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.email}</div>
               <div style="font-size:0.82rem;color:var(--violet);">Lv ${xp.level}</div>
               <div style="font-size:0.82rem;color:var(--cyan);">${xp.xp}</div>
@@ -2743,6 +2796,61 @@ function openProfile() {
     badgeContainer.innerHTML = '<div style="font-size:0.82rem;color:var(--text-muted);">No badges yet — complete lessons to earn them.</div>';
   }
   document.getElementById('profile-modal').classList.add('open');
+}
+
+// ════════════════════════════════
+// PROFILE FUNCTIONS
+// ════════════════════════════════
+function switchProfileTab(tab) {
+  document.querySelectorAll('.profile-tab').forEach((t,i) => {
+    t.classList.toggle('active', (i===0&&tab==='stats')||(i===1&&tab==='edit')||(i===2&&tab==='password'));
+  });
+  document.querySelectorAll('.profile-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('profile-tab-'+tab)?.classList.add('active');
+}
+
+async function saveProfileName() {
+  const newName = document.getElementById('edit-name').value.trim();
+  if (!newName) { showProfileMsg('edit-name-msg', 'error', 'Please enter a name.'); return; }
+  const u = appState.user;
+  try {
+    if (u.supabaseId) {
+      await _supabase.from('profiles').update({ full_name: newName }).eq('id', u.supabaseId);
+      await _supabase.auth.updateUser({ data: { name: newName } });
+    }
+    u.name = newName;
+    document.getElementById('profile-name').textContent = newName;
+    document.getElementById('profile-avatar-lg').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('sidebar-name').textContent = newName;
+    document.getElementById('sidebar-avatar').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('topbar-avatar').textContent = newName.slice(0,2).toUpperCase();
+    document.getElementById('welcome-name').textContent = newName.split(' ')[0];
+    showProfileMsg('edit-name-msg', 'success', '✓ Name updated!');
+  } catch(e) {
+    showProfileMsg('edit-name-msg', 'error', 'Failed to save. Please try again.');
+  }
+}
+
+async function savePassword() {
+  const newPass = document.getElementById('new-password').value;
+  const confirmPass = document.getElementById('confirm-password').value;
+  if (!newPass || newPass.length < 6) { showProfileMsg('edit-password-msg', 'error', 'Password must be at least 6 characters.'); return; }
+  if (newPass !== confirmPass) { showProfileMsg('edit-password-msg', 'error', "Passwords don't match."); return; }
+  try {
+    const { error } = await _supabase.auth.updateUser({ password: newPass });
+    if (error) { showProfileMsg('edit-password-msg', 'error', error.message); return; }
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
+    showProfileMsg('edit-password-msg', 'success', '✓ Password updated!');
+  } catch(e) {
+    showProfileMsg('edit-password-msg', 'error', 'Failed to update. Please try again.');
+  }
+}
+
+function showProfileMsg(id, type, text) {
+  const el = document.getElementById(id); if (!el) return;
+  el.textContent = text; el.className = 'profile-msg ' + type; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
 // ════════════════════════════════
