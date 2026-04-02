@@ -1181,7 +1181,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           <div class="section-head" style="margin-bottom:1rem;">
             <h3>Baseline Assessments</h3>
             <div style="display:flex;gap:0.5rem;">
-              <button class="btn btn-ghost btn-sm" id="bl-filter-btn" onclick="toggleBaselineFilter()">Filter: Ready to Unlock</button>
+              <button class="btn btn-ghost btn-sm" id="bl-filter-btn" onclick="toggleBaselineFilter()">Filter: All</button>
               <button class="btn btn-ghost btn-sm" onclick="loadBaselineAdmin()">↻ Refresh</button>
               <button class="btn btn-v btn-sm" onclick="openAdminViewTasks()">📋 View Tasks</button>
             </div>
@@ -4340,7 +4340,7 @@ function exitBaselineToHome() {
 }
 
 // ── Admin baseline panel ──────────────────────────────────────────────
-let blAdminFilterReady = true;
+let blAdminFilterReady = false;
 
 function toggleBaselineFilter() {
   blAdminFilterReady = !blAdminFilterReady;
