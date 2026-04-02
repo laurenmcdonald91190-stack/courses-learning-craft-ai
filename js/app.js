@@ -396,6 +396,9 @@ function navigateAfterLogin() {
 }
 function renderApp() {
   const u = appState.user;
+  // Restore original dashboard HTML so baseline content from a previous student doesn't persist
+  const dashEl = document.getElementById('page-dashboard');
+  if (dashEl && _dashboardOriginalHTML) dashEl.innerHTML = _dashboardOriginalHTML;
   // Sidebar
   document.getElementById('sidebar-avatar').textContent = u.name.slice(0,2).toUpperCase();
   document.getElementById('sidebar-name').textContent = u.name;
@@ -1395,7 +1398,13 @@ function adminNavTo(panel) {
 }
 
 // Inject tabs into admin on load (ensureAdminTabs also called on login)
-document.addEventListener('DOMContentLoaded', () => { ensureAdminTabs(); });
+// Also save the original dashboard HTML so we can restore it when switching users
+let _dashboardOriginalHTML = null;
+document.addEventListener('DOMContentLoaded', () => {
+  ensureAdminTabs();
+  const dashEl = document.getElementById('page-dashboard');
+  if (dashEl) _dashboardOriginalHTML = dashEl.innerHTML;
+});
 
 function renderAdminCourses() {
   const container = document.getElementById('admin-courses-list');
