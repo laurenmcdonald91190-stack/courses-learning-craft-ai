@@ -477,6 +477,39 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .welcome-callout-text{font-size:0.88rem;color:var(--text-muted);}
 .welcome-callout-text strong{color:var(--cyan);}
 
+/* ── CONCEPT MAP ── */
+.concept-map{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;padding:2rem 2rem 1.75rem;margin-bottom:1.5rem;overflow:hidden;position:relative;}
+.concept-map::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,229,200,0.05) 0%,transparent 65%);pointer-events:none;}
+.concept-map-label{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:1.25rem;display:flex;align-items:center;gap:0.5rem;}
+.concept-map-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);display:inline-block;}
+.concept-map-flow{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;margin-bottom:1.75rem;}
+.cm-node{display:flex;flex-direction:column;align-items:center;gap:0.5rem;opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.cm-node.visible{opacity:1;transform:translateY(0);}
+.cm-node-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.cm-node-icon.cyan{background:rgba(0,229,200,0.1);border:1.5px solid rgba(0,229,200,0.4);box-shadow:0 0 20px rgba(0,229,200,0.12);}
+.cm-node-icon.violet{background:rgba(155,93,229,0.1);border:1.5px solid rgba(155,93,229,0.4);box-shadow:0 0 20px rgba(155,93,229,0.12);}
+.cm-node-icon.gold{background:rgba(245,200,66,0.1);border:1.5px solid rgba(245,200,66,0.35);box-shadow:0 0 20px rgba(245,200,66,0.1);}
+.cm-node-title{font-size:0.78rem;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif;text-align:center;}
+.cm-node-sub{font-size:0.7rem;color:var(--text-muted);font-family:'DM Sans',sans-serif;text-align:center;max-width:90px;line-height:1.4;}
+.cm-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0.5rem;opacity:0;transition:opacity 0.5s ease;flex-shrink:0;}
+.cm-connector.visible{opacity:1;}
+.cm-connector-line{width:32px;height:2px;background:linear-gradient(90deg,rgba(0,229,200,0.4),rgba(155,93,229,0.4));}
+.cm-connector-label{font-size:0.62rem;color:var(--text-dim);font-family:'DM Sans',sans-serif;margin-top:0.3rem;white-space:nowrap;}
+.cm-plus{font-size:1.1rem;color:var(--text-dim);padding:0 0.75rem;opacity:0;transition:opacity 0.5s ease;flex-shrink:0;}
+.cm-plus.visible{opacity:1;}
+.cm-equals{font-size:1.1rem;color:var(--text-dim);padding:0 0.75rem;opacity:0;transition:opacity 0.5s ease;flex-shrink:0;}
+.cm-equals.visible{opacity:1;}
+.cm-insight{background:rgba(0,229,200,0.05);border:1px solid rgba(0,229,200,0.2);border-radius:8px;padding:0.9rem 1.1rem;font-size:0.88rem;color:var(--text-muted);line-height:1.6;opacity:0;transform:translateY(8px);transition:opacity 0.5s ease,transform 0.5s ease;margin-bottom:1.5rem;}
+.cm-insight.visible{opacity:1;transform:translateY(0);}
+.cm-insight strong{color:var(--cyan);}
+.cm-cta{display:flex;justify-content:flex-end;opacity:0;transition:opacity 0.4s ease;}
+.cm-cta.visible{opacity:1;}
+@keyframes tokenPulse{0%,100%{opacity:0.4;}50%{opacity:1;}}
+.cm-token{display:inline-block;font-size:0.7rem;font-family:'DM Sans',sans-serif;padding:0.15rem 0.4rem;border-radius:3px;background:var(--bg3);border:1px solid var(--border-w);color:var(--text-muted);margin:0 1px;animation:tokenPulse 1.8s ease infinite;}
+.cm-token:nth-child(2){animation-delay:0.3s;}
+.cm-token:nth-child(3){animation-delay:0.6s;}
+.cm-token.highlight{border-color:rgba(0,229,200,0.5);color:var(--cyan);animation-delay:0.9s;}
+
 /* ── INTERACTIVE LESSON ── */
 .interactive-wrap{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;}
 .interactive-setup{padding:1.5rem 1.75rem 1.25rem;}
@@ -2318,12 +2351,38 @@ function loadLesson(idx) {
       `<div class="key-point"><span class="key-point-icon">→</span><span class="key-point-text">${kp}</span></div>`
     ).join('') : '';
 
-    body.innerHTML = `
-      <div class="player-meta">
-        <div class="meta-chip"><span>⚡</span><span class="chip-val">+50 XP</span><span>on completion</span></div>
-        <div class="meta-chip gold"><span>🔥</span><span class="chip-val">${appState.user.streak}</span><span>day streak</span></div>
-      </div>
-      ${videoHtml}
+    // Course 1 Lesson 1 gets animated concept map instead of text block
+    const isL1 = course.id === 'course-1' && lesson.id === 'l1';
+    const postVideoBlock = isL1 ? `
+      <div class="concept-map" id="concept-map-block">
+        <div class="concept-map-label">How It Fits Together</div>
+        <div class="concept-map-flow">
+          <div class="cm-node" id="cm-n1">
+            <div class="cm-node-icon cyan">🧠</div>
+            <div class="cm-node-title">Layer 1</div>
+            <div class="cm-node-sub">Pattern Prediction</div>
+            <div style="margin-top:0.4rem;"><span class="cm-token">The</span><span class="cm-token">sky</span><span class="cm-token highlight">blue</span></div>
+          </div>
+          <div class="cm-plus" id="cm-p1">+</div>
+          <div class="cm-node" id="cm-n2">
+            <div class="cm-node-icon violet">👤</div>
+            <div class="cm-node-title">Layer 2</div>
+            <div class="cm-node-sub">Human Judgment</div>
+          </div>
+          <div class="cm-equals" id="cm-eq">=</div>
+          <div class="cm-node" id="cm-n3">
+            <div class="cm-node-icon gold">✦</div>
+            <div class="cm-node-title">Result</div>
+            <div class="cm-node-sub">Helpful, safe, accurate AI</div>
+          </div>
+        </div>
+        <div class="cm-insight" id="cm-insight">
+          The model predicts. <strong>You judge.</strong> Without Layer 2, there's no way to tell a confident wrong answer from a correct one. Your ratings are what close that gap — for every person who uses this AI after you.
+        </div>
+        <div class="cm-cta" id="cm-cta">
+          <button class="btn btn-primary" onclick="goToInteractive()">Try It Yourself <span class="arrow">→</span></button>
+        </div>
+      </div>` : `
       <div class="lesson-content">
         <h2>${lesson.title}</h2>
         <p>${lesson.content}</p>
@@ -2332,6 +2391,44 @@ function loadLesson(idx) {
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;">
         <button class="btn btn-primary" onclick="completeLesson(${idx})">Mark Complete & Continue <span class="arrow">→</span></button>
       </div>`;
+
+    body.innerHTML = `
+      <div class="player-meta">
+        <div class="meta-chip"><span>⚡</span><span class="chip-val">+50 XP</span><span>on completion</span></div>
+        <div class="meta-chip gold"><span>🔥</span><span class="chip-val">${appState.user.streak}</span><span>day streak</span></div>
+      </div>
+      ${videoHtml}
+      ${postVideoBlock}`;
+
+    // Trigger concept map animation after render
+    if (isL1) setTimeout(() => animateConceptMap(), 400);
+  }
+}
+
+function animateConceptMap() {
+  const seq = [
+    { el: 'cm-n1', delay: 0 },
+    { el: 'cm-p1', delay: 300 },
+    { el: 'cm-n2', delay: 500 },
+    { el: 'cm-eq', delay: 800 },
+    { el: 'cm-n3', delay: 1000 },
+    { el: 'cm-insight', delay: 1400 },
+    { el: 'cm-cta', delay: 1900 },
+  ];
+  seq.forEach(({ el, delay }) => {
+    setTimeout(() => {
+      const node = document.getElementById(el);
+      if (node) node.classList.add('visible');
+    }, delay);
+  });
+}
+
+function goToInteractive() {
+  const course = appState.currentCourse;
+  if (!course) return;
+  const interactiveIdx = course.lessons.findIndex(l => l.type === 'interactive');
+  if (interactiveIdx >= 0) {
+    completeLesson(appState.currentLessonIdx);
   }
 }
 
