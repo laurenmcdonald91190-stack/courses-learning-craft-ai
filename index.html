@@ -2508,23 +2508,48 @@ function renderInteractiveHTML(course, lesson, idx) {
   if (lesson.id === 'l1i' && course.id === 'course-1') {
     const alreadyCompleted = appState.user && appState.user.lessonsCompleted.includes(course.id + '-' + lesson.id);
 
-    // If already done — show completed state, not the interactive again
+    // If already done — show read-only revealed state with completion banner
     if (alreadyCompleted) {
       return `
         <div class="player-meta">
           <div class="meta-chip"><span>✓</span><span class="chip-val">Completed</span></div>
           <div class="meta-chip gold"><span>⚡</span><span class="chip-val">+25 XP</span><span>earned</span></div>
         </div>
+        <!-- Completion notice -->
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1.1rem;background:rgba(0,229,200,0.06);border:1px solid rgba(0,229,200,0.25);border-radius:8px;margin-bottom:1rem;">
+          <span style="font-size:1.1rem;">✓</span>
+          <div style="font-size:0.88rem;color:var(--text-muted);">You've already completed this check. Your answer is shown below for reference — <strong style="color:var(--cyan);">Response A</strong> was the better choice.</div>
+        </div>
         <div class="interactive-wrap">
           <div class="interactive-setup">
-            <div class="interactive-label">Quick Check — Complete</div>
-            <div style="display:flex;align-items:center;gap:1rem;padding:1.25rem;background:rgba(0,229,200,0.05);border:1px solid rgba(0,229,200,0.2);border-radius:8px;margin-bottom:1rem;">
-              <div style="font-size:2rem;">✓</div>
-              <div>
-                <div style="font-size:0.95rem;font-weight:700;color:var(--cyan);margin-bottom:0.25rem;">You've already completed this check.</div>
-                <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;">Response A was the better choice — it addressed what the person actually needed, not just what the topic was. Keep that judgment sharp.</div>
-              </div>
+            <div class="interactive-label">Quick Check — Review</div>
+            <div class="interactive-scenario">You just learned that language models predict the next word based on patterns — not understanding. Now see if you can spot the difference in practice.</div>
+            <div class="chat-bubble-wrap">
+              <div class="chat-bubble-avatar">👤</div>
+              <div class="chat-bubble">I've been really stressed about money lately and I don't know where to start. What should I do?</div>
             </div>
+            <div class="interactive-instruction">Two AI systems responded to the same message. Which response would actually help this person?</div>
+          </div>
+          <div class="response-grid">
+            <div class="response-card selected-correct" style="cursor:default;">
+              <div class="response-card-header">
+                <span class="response-card-label">Response A</span>
+                <span class="response-card-badge correct-badge" style="display:block;">✓ Better response</span>
+              </div>
+              <div class="response-card-body">That sounds really overwhelming — money stress is one of the hardest kinds because it touches everything. A good first step is just getting a clear picture of where things stand: what's coming in, what's going out, and what feels most urgent. Would it help to start there?</div>
+            </div>
+            <div class="response-card" style="cursor:default;opacity:0.6;">
+              <div class="response-card-header">
+                <span class="response-card-label">Response B</span>
+                <span class="response-card-badge wrong-badge" style="display:block;">✗ Not this one</span>
+              </div>
+              <div class="response-card-body">Financial stress is a common experience with significant psychological and physiological effects. Effective financial management strategies include budgeting frameworks such as the 50/30/20 rule, debt reduction methodologies including the avalanche and snowball methods, and emergency fund establishment targeting 3–6 months of expenses.</div>
+            </div>
+          </div>
+          <div class="feedback-wrap correct show">
+            <div class="feedback-heading">✓ That's right — and here's why it matters.</div>
+            <div class="feedback-body">Response B is statistically plausible — it contains real financial advice that sounds authoritative. But it doesn't address what this person actually asked. They said they were stressed and didn't know where to start. Response A heard that.<br><br>A language model running on pure prediction will often produce Response B. It's seen thousands of personal finance articles. It's matching patterns. Response A required something different: understanding the person's emotional state and what they actually needed to hear first.<br><br>That gap — between what sounds right and what actually helps — is exactly what you're being trained to close.</div>
+            <div class="feedback-takeaway">Your judgment is what turns pattern prediction into something genuinely useful. That's the job.</div>
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
