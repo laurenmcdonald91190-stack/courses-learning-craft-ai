@@ -2881,8 +2881,20 @@ function prevLesson() {
   if (appState.currentLessonIdx > 0) loadLesson(appState.currentLessonIdx-1);
 }
 function nextLesson() {
-  const max = appState.currentCourse.lessons.length-1;
-  if (appState.currentLessonIdx < max) loadLesson(appState.currentLessonIdx+1);
+  const course = appState.currentCourse;
+  const max = course.lessons.length - 1;
+  const nextIdx = appState.currentLessonIdx + 1;
+  if (nextIdx > max) return;
+  const nextLesson = course.lessons[nextIdx];
+  const isAdminView = appState.isAdmin || appState.isImpersonating;
+  if (nextLesson && nextLesson.locked && !isAdminView) {
+    showLockedModal(
+      nextLesson.title + ' — Coming Soon',
+      "This lesson is being built and will be available soon. You'll be notified when it's ready."
+    );
+    return;
+  }
+  loadLesson(nextIdx);
 }
 
 function exitPlayer() {
