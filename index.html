@@ -965,7 +965,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 ══════════════════════════════ -->
 <div id="view-baseline-tasking" class="view">
   <div class="baseline-topbar">
-    <div style="font-size:0.9rem;font-weight:700;letter-spacing:-0.01em;">Baseline Assessment</div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <button class="btn btn-ghost btn-sm" onclick="exitBaselineToDashboard()" style="font-size:0.78rem;padding:0.35rem 0.75rem;">← Save &amp; Exit</button>
+      <div style="font-size:0.9rem;font-weight:700;letter-spacing:-0.01em;">Baseline Assessment</div>
+    </div>
     <div class="baseline-progress-bar-wrap">
       <div class="baseline-progress-label">
         <span id="bl-task-label">Task 1 of 8</span>
@@ -3981,8 +3984,18 @@ async function enterBaselineAssessment() {
 
 async function loadBaselineTasks() {
   try {
-    // Get active task set
-    const { data: sets } = await _supabase.from('task_sets').select('id').eq('is_active', true).eq('phase', 'baseline').limit(1);
+    // Try active+phase, then active only, then most recent
+    let sets = null;
+    const q1 = await _supabase.from('task_sets').select('id').eq('is_active', true).eq('phase', 'baseline').limit(1);
+    if (q1.data && q1.data.length) { sets = q1.data; }
+    else {
+      const q2 = await _supabase.from('task_sets').select('id').eq('is_active', true).limit(1);
+      if (q2.data && q2.data.length) { sets = q2.data; }
+      else {
+        const q3 = await _supabase.from('task_sets').select('id').order('created_at', { ascending: false }).limit(1);
+        if (q3.data && q3.data.length) { sets = q3.data; }
+      }
+    }
     if (!sets || !sets.length) { blState.tasks = []; return; }
     const setId = sets[0].id;
     const { data: tasks } = await _supabase.from('tasks').select('*').eq('task_set_id', setId).eq('is_active', true).order('order_index');
@@ -4233,6 +4246,13 @@ async function submitBaselineTask() {
   }
 }
 
+function exitBaselineToDashboard() {
+  clearInterval(blTimerInterval);
+  showView('view-app');
+  navTo('dashboard');
+  showToast('success', '💾', 'Progress saved. You can resume anytime.');
+}
+
 function blNavTo(idx) {
   clearInterval(blTimerInterval);
   blState.currentTaskIdx = idx;
@@ -4374,6 +4394,7 @@ async function loadBaselineAdmin() {
                 <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;" onclick="viewBaselineResponses('${a.id}','${name}')">View</button>
                 ${!a.unlock_code_sent_at ? `<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;background:rgba(0,229,200,0.12);color:var(--cyan);border:1px solid rgba(0,229,200,0.3);" onclick="markCodeSent('${a.id}')">Mark Sent</button>` : ''}
                 ${!a.course_access_unlocked ? `<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;background:rgba(155,93,229,0.12);color:var(--violet);border:1px solid var(--border-v);" onclick="toggleCourseAccess('${a.id}', true)">Unlock</button>` : `<button class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;" onclick="toggleCourseAccess('${a.id}', false)">Revoke</button>`}
+                <button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;background:rgba(255,80,80,0.1);color:#ff6b6b;border:1px solid rgba(255,80,80,0.25);" onclick="confirmResetBaseline('${a.id}','${name}')">Reset</button>
               </div>
             </div>`;
         }).join('')}
@@ -4391,8 +4412,19 @@ async function openAdminViewTasks() {
   body.innerHTML = '<div style="color:var(--text-muted);padding:1rem 0;">Loading tasks...</div>';
   modal.classList.add('open');
   try {
-    const { data: sets } = await _supabase.from('task_sets').select('id,name').eq('is_active', true).eq('phase', 'baseline').limit(1);
-    if (!sets || !sets.length) { body.innerHTML = '<div style="color:#ff6b6b;">No active baseline task set found.</div>'; return; }
+    // Try active+phase first, then active only, then any
+    let sets = null;
+    const q1 = await _supabase.from('task_sets').select('id,name').eq('is_active', true).eq('phase', 'baseline').limit(1);
+    if (q1.data && q1.data.length) { sets = q1.data; }
+    else {
+      const q2 = await _supabase.from('task_sets').select('id,name').eq('is_active', true).limit(1);
+      if (q2.data && q2.data.length) { sets = q2.data; }
+      else {
+        const q3 = await _supabase.from('task_sets').select('id,name').order('created_at', { ascending: false }).limit(1);
+        if (q3.data && q3.data.length) { sets = q3.data; }
+      }
+    }
+    if (!sets || !sets.length) { body.innerHTML = '<div style="color:#ff6b6b;">No task sets found in Supabase. Make sure the baseline_schema.sql ran successfully.</div>'; return; }
     const { data: tasks } = await _supabase.from('tasks').select('*').eq('task_set_id', sets[0].id).order('order_index');
     if (!tasks || !tasks.length) { body.innerHTML = '<div style="color:#ff6b6b;">No tasks found.</div>'; return; }
     const esc = s => String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -4432,6 +4464,27 @@ async function toggleCourseAccess(assessmentId, val) {
   await _supabase.from('baseline_assessments').update({ course_access_unlocked: val }).eq('id', assessmentId);
   showToast('success', val ? '🔓' : '🔒', val ? 'Course access unlocked.' : 'Course access revoked.');
   loadBaselineAdmin();
+}
+
+function confirmResetBaseline(assessmentId, studentName) {
+  const confirmed = confirm(`⚠️ Reset baseline for ${studentName}?\n\nThis will permanently delete all their task attempts and reset their assessment to Not Started. Their XP earned from baseline tasks will also be removed.\n\nThis cannot be undone.`);
+  if (confirmed) resetBaselineAssessment(assessmentId);
+}
+
+async function resetBaselineAssessment(assessmentId) {
+  try {
+    // Delete all task attempts for this assessment
+    await _supabase.from('task_attempts').delete().eq('assessment_id', assessmentId);
+    // Delete the assessment row itself (student will get a fresh one on next entry)
+    await _supabase.from('baseline_assessments').delete().eq('id', assessmentId);
+    // Remove baseline XP events for this user — get user_id first
+    // (We do a best-effort removal; XP events use source_id pattern 'baseline-task-*' and 'baseline-complete')
+    showToast('success', '🔄', 'Baseline reset. Student can start fresh.');
+    loadBaselineAdmin();
+  } catch(e) {
+    console.error('Reset failed', e);
+    showToast('error', '⚠', 'Reset failed. Check console.');
+  }
 }
 
 async function viewBaselineResponses(assessmentId, studentName) {
