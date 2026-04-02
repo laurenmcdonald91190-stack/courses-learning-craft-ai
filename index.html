@@ -2506,6 +2506,32 @@ function goToInteractive() {
 function renderInteractiveHTML(course, lesson, idx) {
   // Only defined for Course 1 Lesson 1 interactive — extensible later
   if (lesson.id === 'l1i' && course.id === 'course-1') {
+    const alreadyCompleted = appState.user && appState.user.lessonsCompleted.includes(course.id + '-' + lesson.id);
+
+    // If already done — show completed state, not the interactive again
+    if (alreadyCompleted) {
+      return `
+        <div class="player-meta">
+          <div class="meta-chip"><span>✓</span><span class="chip-val">Completed</span></div>
+          <div class="meta-chip gold"><span>⚡</span><span class="chip-val">+25 XP</span><span>earned</span></div>
+        </div>
+        <div class="interactive-wrap">
+          <div class="interactive-setup">
+            <div class="interactive-label">Quick Check — Complete</div>
+            <div style="display:flex;align-items:center;gap:1rem;padding:1.25rem;background:rgba(0,229,200,0.05);border:1px solid rgba(0,229,200,0.2);border-radius:8px;margin-bottom:1rem;">
+              <div style="font-size:2rem;">✓</div>
+              <div>
+                <div style="font-size:0.95rem;font-weight:700;color:var(--cyan);margin-bottom:0.25rem;">You've already completed this check.</div>
+                <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;">Response A was the better choice — it addressed what the person actually needed, not just what the topic was. Keep that judgment sharp.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+          <button class="btn btn-ghost btn-sm" onclick="nextLesson()">Next Lesson <span class="arrow">→</span></button>
+        </div>`;
+    }
+
     return `
       <div class="player-meta">
         <div class="meta-chip"><span>🎯</span><span class="chip-val">Quick Check</span></div>
@@ -2551,10 +2577,43 @@ function renderInteractiveHTML(course, lesson, idx) {
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;">
-        <button class="btn btn-primary" id="ic-continue-btn" onclick="completeLesson(${idx})" style="display:none;">Continue <span class="arrow">→</span></button>
+        <button class="btn btn-primary" id="ic-continue-btn" onclick="completeInteractive(${idx})" style="display:none;">Continue <span class="arrow">→</span></button>
       </div>`;
   }
   return '<p style="color:var(--text-muted);">Interactive content coming soon.</p>';
+}
+
+async function completeInteractive(idx) {
+  const course = appState.currentCourse;
+  const lesson = course.lessons[idx];
+  const key = course.id + '-' + lesson.id;
+  const u = appState.user;
+
+  if (!u.lessonsCompleted.includes(key)) {
+    u.lessonsCompleted.push(key);
+    // Save to Supabase
+    await saveProgressToSupabase(course.id, lesson.id);
+    checkBadges();
+  }
+  renderLessonList();
+  updateXPBar();
+
+  // Navigate to next — respect lock
+  const nextIdx = idx + 1;
+  if (nextIdx < course.lessons.length) {
+    const nextL = course.lessons[nextIdx];
+    const isAdminView = appState.isAdmin || appState.isImpersonating;
+    if (nextL && nextL.locked && !isAdminView) {
+      showLockedModal(
+        nextL.title + ' — Coming Soon',
+        "This lesson is being built and will be available soon. You'll be notified when it's ready."
+      );
+    } else {
+      loadLesson(nextIdx);
+    }
+  } else {
+    showToast('success', '✓', "You've reached the end of this course!");
+  }
 }
 
 function selectInteractiveAnswer(choice) {
@@ -2588,7 +2647,9 @@ function selectInteractiveAnswer(choice) {
     feedbackWrong.classList.add('show');
   }
 
-  // Disable further clicks
+  // Disable further clicks permanently
+  cardA.onclick = null;
+  cardB.onclick = null;
   cardA.style.cursor = 'default';
   cardB.style.cursor = 'default';
   cardA.style.transform = '';
