@@ -461,6 +461,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .task-complete-banner{background:rgba(0,229,200,0.08);border:1px solid rgba(0,229,200,0.2);border-radius:10px;padding:2rem;text-align:center;}
 @media(max-width:700px){.rubric-grid{grid-template-columns:1fr;}.comparison-grid{grid-template-columns:1fr !important;}}
 
+/* ── WELCOME VIDEO VIEW ── */
+#view-welcome{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:var(--bg);}
+#view-welcome.active{display:flex;}
+.welcome-video-card{width:100%;max-width:780px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;}
+.welcome-video-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet));z-index:1;}
+.welcome-video-logo{display:flex;align-items:center;gap:0.5rem;font-family:'DM Sans',sans-serif;font-weight:800;font-size:0.95rem;padding:1.4rem 1.8rem 0.8rem;justify-content:center;}
+.welcome-video-logo .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.welcome-video-embed{position:relative;width:100%;aspect-ratio:16/9;}
+.welcome-video-embed iframe{width:100%;height:100%;border:none;display:block;}
+.welcome-video-footer{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 1.8rem;gap:1rem;flex-wrap:wrap;}
+.welcome-skip{font-size:0.8rem;color:var(--text-muted);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color 0.2s;}
+.welcome-skip:hover{color:var(--text);}
+.welcome-callout{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:0.9rem 1.1rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;}
+.welcome-callout-text{font-size:0.88rem;color:var(--text-muted);}
+.welcome-callout-text strong{color:var(--cyan);}
+
 /* ── ANIMATIONS ── */
 .fade-in{opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .fade-in.visible{opacity:1;transform:translateY(0);}
@@ -559,6 +575,25 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- ══════════════════════════════
      MAIN APP VIEW (STUDENT)
 ══════════════════════════════ -->
+<!-- ══════════════════════════════
+     WELCOME VIDEO VIEW
+══════════════════════════════ -->
+<div id="view-welcome" class="view">
+  <div class="welcome-video-card">
+    <div class="welcome-video-logo"><span class="dot"></span> Learning Craft AI</div>
+    <div class="welcome-video-embed">
+      <iframe src="https://app.heygen.com/embeds/5b58bf98f90842baaa7fba9381b068e3" title="Welcome to Learning Craft AI" allow="encrypted-media; fullscreen;" allowfullscreen></iframe>
+    </div>
+    <div class="welcome-video-footer">
+      <div style="font-size:0.9rem;color:var(--text-muted);">Watch this short intro before you dive in — it sets everything up.</div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <button class="welcome-skip" onclick="dismissWelcome()">Skip →</button>
+        <button class="btn btn-primary btn-sm" onclick="dismissWelcome()">Continue to Dashboard <span class="arrow">→</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="view-app" class="view">
   <div class="app-layout">
 
@@ -581,6 +616,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </a>
         <a class="nav-item" data-nav="my-courses" onclick="navTo('my-courses')">
           <span class="nav-icon">◈</span> My Courses
+        </a>
+        <a class="nav-item" data-nav="welcome-video" onclick="showWelcomeVideo()">
+          <span class="nav-icon">▶</span> Welcome Video
         </a>
         <div class="nav-section">Community</div>
         <a class="nav-item" data-nav="leaderboard" onclick="navTo('leaderboard')">
@@ -658,6 +696,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
         </div>
 
+        <div class="welcome-callout fade-in" id="welcome-callout" style="display:none;">
+          <div class="welcome-callout-text">👋 <strong>New here?</strong> Watch the welcome video to get oriented before you start.</div>
+          <div style="display:flex;gap:0.75rem;align-items:center;">
+            <button class="btn btn-primary btn-sm" onclick="showWelcomeVideo()">Watch Now →</button>
+            <button class="welcome-skip" onclick="dismissWelcomeCallout()">Dismiss</button>
+          </div>
+        </div>
         <div class="stats-row fade-in">
           <div class="stat-card c"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-xp">0</div><div class="stat-name">Total XP Earned</div></div>
           <div class="stat-card v"><div class="stat-icon">◈</div><div class="stat-val" id="stat-lessons">0</div><div class="stat-name">Lessons Completed</div></div>
@@ -1028,7 +1073,7 @@ let courses = [
     lessons: [
       {
         id: 'l1', title: 'What Is a Language Model?', type: 'video',
-        videoUrl: 'https://app.heygen.com/embeds/f19ba0df3bdf45fd85adf81e6af2edb9',
+        videoUrl: '',
         content: 'A language model is a type of AI that has been trained to understand and generate human language. But it did not learn on its own — it learned from massive amounts of text written by humans, and from human feedback on its outputs. Before you can contribute to AI training, you need to understand what you are actually building. This lesson covers what language models are, how they generate responses, and why they need human input to improve.',
         keyPoints: [
           'Language models predict the most likely next word based on patterns learned from training data',
@@ -1803,13 +1848,56 @@ async function loadLeaderboard() {
   }
 }
 
+// ════════════════════════════════
+// WELCOME VIDEO
+// ════════════════════════════════
+function hasSeenWelcome() {
+  try { return localStorage.getItem('lcai_welcome_seen') === '1'; } catch(e) { return false; }
+}
+function markWelcomeSeen() {
+  try { localStorage.setItem('lcai_welcome_seen', '1'); } catch(e) {}
+}
+function hasStartedCourse1() {
+  const u = appState.user;
+  if (!u) return false;
+  return (u.lessonsCompleted || []).some(k => k.startsWith('course-1'));
+}
+function shouldShowWelcome() {
+  if (appState.isDemo || appState.isAdmin) return false;
+  return !hasSeenWelcome() && !hasStartedCourse1();
+}
+function showWelcomeVideo() {
+  showView('view-welcome');
+}
+function dismissWelcome() {
+  markWelcomeSeen();
+  showView('view-app');
+  renderApp();
+  navTo('dashboard');
+  updateWelcomeCallout();
+}
+function dismissWelcomeCallout() {
+  markWelcomeSeen();
+  updateWelcomeCallout();
+}
+function updateWelcomeCallout() {
+  const el = document.getElementById('welcome-callout');
+  if (!el) return;
+  const show = !hasSeenWelcome() && !hasStartedCourse1() && !appState.isDemo && !appState.isAdmin;
+  el.style.display = show ? 'flex' : 'none';
+}
+
 async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
   await loadLeaderboard();
-  showView('view-app');
-  renderApp();
-  navigateAfterLogin();
+  if (shouldShowWelcome()) {
+    showView('view-welcome');
+  } else {
+    showView('view-app');
+    renderApp();
+    navigateAfterLogin();
+  }
   showToast('success','✓', `Welcome back, ${user.name}!`);
 }
 
@@ -1846,7 +1934,7 @@ function showView(id) {
   if (!el) return;
   el.classList.add('active');
   if (id === 'view-player') el.style.display = 'grid';
-  else if (id === 'view-auth') el.style.display = 'flex';
+  else if (id === 'view-auth' || id === 'view-welcome') el.style.display = 'flex';
   else el.style.display = 'block';
 }
 
@@ -1867,6 +1955,7 @@ function navTo(page) {
   if (page === 'leaderboard') renderLeaderboardFull();
   if (page === 'achievements') renderAllBadges();
   if (page === 'my-courses') renderMyCourses();
+  if (page === 'dashboard') updateWelcomeCallout();
   initFadeIns();
   window.scrollTo({top:0,behavior:'instant'});
   // Update hash only when logged in
@@ -1909,6 +1998,7 @@ function renderApp() {
   if (appState.isImpersonating) document.getElementById('impersonate-name').textContent = appState.user.name;
   updateXPBar();
   renderDashboard();
+  updateWelcomeCallout();
   initFadeIns();
 }
 
@@ -2431,6 +2521,7 @@ function completeLesson(idx) {
   }
   renderLessonList();
   updateXPBar();
+  updateWelcomeCallout();
 
   // Check course complete
   const allDone = course.lessons.every(l => u.lessonsCompleted.includes(course.id+'-'+l.id));
