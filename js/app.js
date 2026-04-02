@@ -1696,6 +1696,11 @@ async function impersonateStudentById(uid) {
     };
     appState.isAdmin = false;
     appState.isImpersonating = true;
+    // Reset baseline state so we load this student's assessment, not a previous one
+    blState.assessment = null;
+    blState.tasks = [];
+    blState.attempts = {};
+    blState.currentTaskIdx = 0;
     await loadLeaderboard();
     showView('view-app');
     renderApp();
@@ -1703,6 +1708,7 @@ async function impersonateStudentById(uid) {
     const banner = document.getElementById('impersonate-banner');
     if (banner) banner.style.display = 'flex';
     document.getElementById('impersonate-name').textContent = name;
+    initBaseline();
   } catch(e) {
     showToast('error', '⚠', 'Failed to load student data.');
     console.error(e);
@@ -1727,6 +1733,11 @@ async function impersonateStudent(uid, name, email, xp, level, streak, lessons) 
     };
     appState.isAdmin = false;
     appState.isImpersonating = true;
+    // Reset baseline state so we load this student's assessment, not a previous one
+    blState.assessment = null;
+    blState.tasks = [];
+    blState.attempts = {};
+    blState.currentTaskIdx = 0;
     await loadLeaderboard();
     showView('view-app');
     renderApp();
@@ -1735,6 +1746,7 @@ async function impersonateStudent(uid, name, email, xp, level, streak, lessons) 
     const banner = document.getElementById('impersonate-banner');
     if (banner) { banner.style.display = 'flex'; }
     document.getElementById('impersonate-name').textContent = name;
+    initBaseline();
   } catch(e) {
     showToast('error', '⚠', 'Failed to load student data.');
     console.error(e);
