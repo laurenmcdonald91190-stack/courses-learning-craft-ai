@@ -2485,7 +2485,21 @@ function goToInteractive() {
   if (!course) return;
   const interactiveIdx = course.lessons.findIndex(l => l.type === 'interactive');
   if (interactiveIdx >= 0) {
-    completeLesson(appState.currentLessonIdx);
+    // Mark current lesson complete without navigating via completeLesson's auto-advance
+    const lesson = course.lessons[appState.currentLessonIdx];
+    const key = course.id + '-' + lesson.id;
+    const u = appState.user;
+    if (!u.lessonsCompleted.includes(key)) {
+      u.lessonsCompleted.push(key);
+      saveProgressToSupabase(course.id, lesson.id);
+      addXP(50);
+      spawnXPPop('+50 XP');
+      showMilestoneBanner('⚡', 'Lesson complete! +50 XP');
+      checkBadges();
+    }
+    renderLessonList();
+    updateXPBar();
+    loadLesson(interactiveIdx);
   }
 }
 
@@ -2554,14 +2568,20 @@ function selectInteractiveAnswer(choice) {
   if (cardA.classList.contains('selected-correct') || cardA.classList.contains('selected-wrong')) return;
 
   const isCorrect = choice === 'a';
+  // Check if interactive already completed — don't re-award XP
+  const course = appState.currentCourse;
+  const interactiveKey = course ? course.id + '-l1i' : null;
+  const alreadyDone = interactiveKey && appState.user && appState.user.lessonsCompleted.includes(interactiveKey);
 
   if (isCorrect) {
     cardA.classList.add('selected-correct');
     cardB.classList.add('reveal-correct');
     feedbackCorrect.classList.add('show');
-    addXP(25);
-    spawnXPPop('+25 XP');
-    showMilestoneBanner('🎯', 'Nice judgment call! +25 XP');
+    if (!alreadyDone) {
+      addXP(25);
+      spawnXPPop('+25 XP');
+      showMilestoneBanner('🎯', 'Nice judgment call! +25 XP');
+    }
   } else {
     cardB.classList.add('selected-wrong');
     cardA.classList.add('reveal-correct');
@@ -2872,9 +2892,22 @@ function completeLesson(idx) {
     }
   }
 
-  // Next lesson
-  if (idx < course.lessons.length - 1) loadLesson(idx+1);
-  else showToast('success','✓','You\'ve reached the end of this course!');
+  // Next lesson — check if locked before navigating
+  const nextIdx = idx + 1;
+  if (nextIdx < course.lessons.length) {
+    const nextL = course.lessons[nextIdx];
+    const isAdminView = appState.isAdmin || appState.isImpersonating;
+    if (nextL && nextL.locked && !isAdminView) {
+      showLockedModal(
+        nextL.title + ' — Coming Soon',
+        "This lesson is being built and will be available soon. You'll be notified when it's ready."
+      );
+    } else {
+      loadLesson(nextIdx);
+    }
+  } else {
+    showToast('success','✓','You\'ve reached the end of this course!');
+  }
 }
 
 function prevLesson() {
