@@ -3597,7 +3597,7 @@ async function renderAdminStudents() {
               <div style="font-size:0.82rem;color:var(--cyan);">${xp.xp}</div>
               <div style="font-size:0.82rem;color:var(--text-muted);">${lessons}</div>
               <div style="font-size:0.78rem;color:var(--text-dim);">${joined}</div>
-              <div><button class="btn btn-ghost btn-sm" onclick="impersonateStudent('${p.id}','${p.full_name || p.email.split('@')[0]}','${p.email}',${xp.xp},${xp.level},${xp.streak || 1},${lessons})" style="font-size:0.72rem;padding:0.3rem 0.7rem;">👁 View</button></div>
+              <div><button class="btn btn-ghost btn-sm" onclick="impersonateStudentById('${p.id}')" style="font-size:0.72rem;padding:0.3rem 0.7rem;">👁 View</button></div>
             </div>`;
         }).join('')}
       </div>`;
@@ -3609,6 +3609,46 @@ async function renderAdminStudents() {
 }
 
 function refreshStudents() { renderAdminStudents(); }
+
+async function impersonateStudentById(uid) {
+  try {
+    // Always fetch fresh data from Supabase — never use stale inline values
+    const [profileRes, xpRes, progressRes] = await Promise.all([
+      _supabase.from('profiles').select('full_name, email').eq('id', uid).single(),
+      _supabase.from('user_xp').select('xp, level, streak').eq('user_id', uid).single(),
+      _supabase.from('course_progress').select('course_id, lesson_id').eq('user_id', uid).eq('completed', true)
+    ]);
+    const profile = profileRes.data || {};
+    const xpData = xpRes.data || { xp: 0, level: 1, streak: 1 };
+    const lessonsCompleted = (progressRes.data || []).map(r => r.course_id + '-' + r.lesson_id);
+    const name = profile.full_name || (profile.email || '').split('@')[0].replace(/[^a-zA-Z]/g,' ').trim() || 'Student';
+    const email = profile.email || '';
+
+    appState.prevAdminState = { isAdmin: true, user: appState.user };
+    appState.user = {
+      name, email,
+      supabaseId: uid,
+      xp: xpData.xp || 0,
+      level: xpData.level || 1,
+      streak: xpData.streak || 1,
+      lessonsCompleted,
+      correctAnswers: 0,
+      badges: []
+    };
+    appState.isAdmin = false;
+    appState.isImpersonating = true;
+    await loadLeaderboard();
+    showView('view-app');
+    renderApp();
+    navTo('dashboard');
+    const banner = document.getElementById('impersonate-banner');
+    if (banner) banner.style.display = 'flex';
+    document.getElementById('impersonate-name').textContent = name;
+  } catch(e) {
+    showToast('error', '⚠', 'Failed to load student data.');
+    console.error(e);
+  }
+}
 
 async function impersonateStudent(uid, name, email, xp, level, streak, lessons) {
   // Load their real progress from Supabase
