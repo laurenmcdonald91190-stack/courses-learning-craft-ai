@@ -487,6 +487,97 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .welcome-callout-text{font-size:0.88rem;color:var(--text-muted);}
 .welcome-callout-text strong{color:var(--cyan);}
 
+/* ── BASELINE ASSESSMENT ── */
+#view-baseline-tasking{display:none;min-height:100vh;background:var(--bg);}
+#view-baseline-tasking.active{display:block;}
+.baseline-topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(8,11,16,0.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;}
+.baseline-progress-bar-wrap{flex:1;max-width:300px;margin:0 1.5rem;}
+.baseline-progress-label{font-size:0.72rem;color:var(--text-muted);margin-bottom:0.3rem;display:flex;justify-content:space-between;}
+.baseline-body{max-width:860px;margin:0 auto;padding:2rem;}
+.task-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;}
+.task-number-badge{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--violet);border:1px solid var(--border-v);background:rgba(155,93,229,0.08);padding:0.3rem 0.75rem;border-radius:3px;}
+.task-timer{font-size:0.78rem;color:var(--text-dim);font-family:'DM Sans',sans-serif;}
+.task-prompt-card{background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.4rem 1.6rem;margin-bottom:1.25rem;}
+.task-prompt-label{font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.6rem;}
+.task-prompt-text{font-size:0.95rem;line-height:1.7;color:var(--text);font-weight:500;}
+.task-responses{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem;}
+.task-response-card{border:1.5px solid var(--border-w);border-radius:8px;background:var(--bg3);cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.task-response-card:hover:not(.locked-response){border-color:rgba(155,93,229,0.4);transform:translateY(-1px);}
+.task-response-card.selected{border-color:var(--violet);background:rgba(155,93,229,0.07);}
+.task-response-card.locked-response{cursor:default;}
+.task-response-header{display:flex;align-items:center;justify-content:space-between;padding:0.65rem 1rem;border-bottom:1px solid var(--border-w);}
+.task-response-label{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);}
+.task-response-check{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-w);display:flex;align-items:center;justify-content:center;font-size:0.65rem;transition:all 0.2s;}
+.task-response-card.selected .task-response-check{background:var(--violet);border-color:var(--violet);color:white;}
+.task-response-body{padding:0.9rem 1rem;font-size:0.875rem;line-height:1.7;color:var(--text-muted);}
+.task-justification{margin-bottom:1.25rem;}
+.task-justification label{font-size:0.7rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.5rem;}
+.task-justification textarea{width:100%;min-height:110px;resize:vertical;background:var(--bg2);border:1px solid var(--border-w);border-radius:6px;padding:0.8rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;line-height:1.6;}
+.task-justification textarea:focus{border-color:rgba(155,93,229,0.4);}
+.task-justification .char-count{font-size:0.72rem;color:var(--text-dim);text-align:right;margin-top:0.3rem;}
+.task-justification .char-count.ok{color:var(--cyan);}
+.task-error{font-size:0.8rem;color:#ff6b6b;margin-bottom:0.75rem;display:none;}
+.task-error.show{display:block;}
+.task-submitted-banner{background:rgba(0,229,200,0.06);border:1px solid rgba(0,229,200,0.2);border-radius:6px;padding:0.7rem 1rem;font-size:0.82rem;color:var(--cyan);margin-bottom:1rem;display:none;}
+.task-submitted-banner.show{display:block;}
+.task-nav-row{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;}
+.task-autosave{font-size:0.72rem;color:var(--text-dim);}
+/* Baseline dashboard override */
+.baseline-dashboard{padding:0;}
+.bl-hero{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:1.5rem;position:relative;overflow:hidden;}
+.bl-hero::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(155,93,229,0.08),transparent 70%);}
+.bl-hero::after{content:'';position:absolute;left:-20px;bottom:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,200,0.06),transparent 70%);}
+.bl-hero-tag{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--violet);border:1px solid var(--border-v);background:rgba(155,93,229,0.08);padding:0.25rem 0.65rem;border-radius:3px;display:inline-block;margin-bottom:1rem;}
+.bl-hero h2{font-size:1.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.75rem;line-height:1.3;}
+.bl-hero p{font-size:0.9rem;color:var(--text-muted);line-height:1.75;max-width:640px;}
+/* Path animation */
+.bl-path{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;padding:1.75rem 2rem;margin-bottom:1.5rem;overflow:hidden;}
+.bl-path-label{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:1.25rem;}
+.bl-path-nodes{display:flex;align-items:center;justify-content:space-between;position:relative;}
+.bl-path-line{position:absolute;top:28px;left:60px;right:60px;height:2px;background:var(--bg3);z-index:0;}
+.bl-path-line-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width 1.2s ease;border-radius:2px;}
+.bl-path-node{display:flex;flex-direction:column;align-items:center;gap:0.5rem;position:relative;z-index:1;opacity:0;transform:translateY(10px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.bl-path-node.visible{opacity:1;transform:translateY(0);}
+.bl-path-node-icon{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;border:2px solid var(--border-w);background:var(--bg3);}
+.bl-path-node-icon.active-node{border-color:var(--cyan);background:rgba(0,229,200,0.1);box-shadow:0 0 16px rgba(0,229,200,0.2);}
+.bl-path-node-icon.done-node{border-color:var(--cyan);background:rgba(0,229,200,0.15);}
+.bl-path-node-label{font-size:0.72rem;font-weight:600;color:var(--text-muted);text-align:center;max-width:80px;line-height:1.3;}
+/* Overview + status cards */
+.bl-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;}
+.bl-card{background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.4rem;}
+.bl-card-title{font-size:0.72rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:1rem;}
+.bl-overview-items{display:flex;flex-direction:column;gap:0.6rem;}
+.bl-overview-item{display:flex;align-items:center;gap:0.6rem;font-size:0.88rem;color:var(--text-muted);}
+.bl-overview-item span:first-child{color:var(--cyan);font-size:1rem;}
+.bl-status-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;padding:0.3rem 0.75rem;border-radius:4px;margin-bottom:0.75rem;}
+.bl-status-badge.not-started{background:rgba(122,138,154,0.1);color:var(--text-muted);border:1px solid var(--border-w);}
+.bl-status-badge.in-progress{background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);}
+.bl-status-badge.completed{background:rgba(0,229,200,0.1);color:var(--cyan);border:1px solid rgba(0,229,200,0.3);}
+/* Completion screen */
+.bl-complete{background:var(--bg2);border:1px solid rgba(0,229,200,0.25);border-radius:12px;padding:2.5rem;text-align:center;margin-bottom:1.5rem;}
+.bl-complete-icon{font-size:3rem;margin-bottom:1rem;}
+.bl-complete h3{font-size:1.4rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.75rem;}
+.bl-complete p{font-size:0.92rem;color:var(--text-muted);line-height:1.75;max-width:520px;margin:0 auto 1.5rem;}
+/* Review */
+.bl-review-task{background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.5rem;margin-bottom:1rem;}
+.bl-review-task-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.bl-review-chosen{font-size:0.78rem;padding:0.2rem 0.55rem;border-radius:3px;}
+.bl-review-chosen.correct{background:rgba(0,229,200,0.1);color:var(--cyan);border:1px solid rgba(0,229,200,0.3);}
+.bl-review-chosen.incorrect{background:rgba(255,107,107,0.1);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);}
+.bl-review-section{font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.4rem;}
+.bl-review-text{font-size:0.88rem;color:var(--text-muted);line-height:1.65;margin-bottom:1rem;}
+.bl-review-explanation{background:rgba(0,229,200,0.04);border:1px solid rgba(0,229,200,0.15);border-radius:6px;padding:0.9rem 1rem;font-size:0.875rem;color:var(--text-muted);line-height:1.65;}
+.bl-review-explanation strong{color:var(--cyan);}
+/* Admin baseline panel */
+.bl-admin-row{display:grid;grid-template-columns:1.4fr 1.6fr 80px 90px 100px 90px 90px 80px;gap:0.75rem;padding:0.9rem 1.2rem;border-bottom:1px solid var(--border-w);align-items:center;font-size:0.82rem;transition:background 0.18s;}
+.bl-admin-row:hover{background:rgba(255,255,255,0.02);}
+.bl-admin-row.header{font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-dim);background:var(--bg3);}
+.bl-status-pill{font-size:0.68rem;font-weight:700;padding:0.18rem 0.5rem;border-radius:3px;white-space:nowrap;}
+.bl-status-pill.not_started{color:var(--text-dim);border:1px solid var(--border-w);}
+.bl-status-pill.in_progress{color:var(--gold);border:1px solid rgba(245,200,66,0.3);background:rgba(245,200,66,0.08);}
+.bl-status-pill.completed{color:var(--cyan);border:1px solid rgba(0,229,200,0.3);background:rgba(0,229,200,0.08);}
+@media(max-width:700px){.task-responses{grid-template-columns:1fr;}.bl-cards{grid-template-columns:1fr;}}
+
 /* ── CONCEPT MAP ── */
 .concept-map{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;padding:2rem 2rem 1.75rem;margin-bottom:1.5rem;overflow:hidden;position:relative;}
 .concept-map::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(0,229,200,0.05) 0%,transparent 65%);pointer-events:none;}
@@ -707,6 +798,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <a class="nav-item active" data-nav="dashboard" onclick="navTo('dashboard')">
           <span class="nav-icon">⊞</span> Dashboard
         </a>
+        <a class="nav-item" data-nav="baseline-entry" id="nav-baseline-entry" onclick="enterBaselineAssessment()">
+          <span class="nav-icon">🧪</span> <span id="nav-baseline-label">Baseline Assessment</span>
+        </a>
         <a class="nav-item" data-nav="my-courses" onclick="navTo('my-courses')">
           <span class="nav-icon">◈</span> My Courses
         </a>
@@ -866,6 +960,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- ══════════════════════════════
      COURSE PLAYER VIEW
 ══════════════════════════════ -->
+<!-- ══════════════════════════════
+     BASELINE TASKING VIEW
+══════════════════════════════ -->
+<div id="view-baseline-tasking" class="view">
+  <div class="baseline-topbar">
+    <div style="font-size:0.9rem;font-weight:700;letter-spacing:-0.01em;">Baseline Assessment</div>
+    <div class="baseline-progress-bar-wrap">
+      <div class="baseline-progress-label">
+        <span id="bl-task-label">Task 1 of 8</span>
+        <span id="bl-task-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="bl-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div style="font-size:0.78rem;color:var(--text-dim);" id="bl-autosave-label">Auto-saving...</div>
+  </div>
+  <div class="baseline-body" id="baseline-body">
+    <!-- Dynamically rendered -->
+  </div>
+</div>
+
 <div id="view-player" class="view">
   <aside class="player-sidebar">
     <div class="player-back" onclick="exitPlayer()">← Back to Dashboard</div>
@@ -912,6 +1026,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <a class="nav-item" onclick="adminNavTo('stats')"><span class="nav-icon">📊</span> Course Stats</a>
         <a class="nav-item" onclick="adminNavTo('submissions')"><span class="nav-icon">🗂️</span> Task Submissions</a>
         <a class="nav-item" onclick="adminNavTo('announcements')"><span class="nav-icon">📣</span> Announcements</a>
+        <a class="nav-item" onclick="adminNavTo('baseline')"><span class="nav-icon">🧪</span> Baseline Assessments</a>
       </nav>
       <div class="sidebar-bottom">
         <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
@@ -1057,8 +1172,30 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             </div>
           </div>
         </div>
+
+        <!-- Baseline Assessment Admin Panel -->
+        <div id="admin-panel-baseline" class="admin-panel">
+          <div class="section-head" style="margin-bottom:1rem;">
+            <h3>Baseline Assessments</h3>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-ghost btn-sm" id="bl-filter-btn" onclick="toggleBaselineFilter()">Filter: Ready to Unlock</button>
+              <button class="btn btn-ghost btn-sm" onclick="loadBaselineAdmin()">↻ Refresh</button>
+            </div>
+          </div>
+          <div id="bl-admin-loading" style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">Loading assessments...</div>
+          <div id="bl-admin-list" style="display:none;"></div>
+        </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- ── BASELINE RESPONSE MODAL ── -->
+<div class="modal-overlay" id="bl-response-modal" onclick="document.getElementById('bl-response-modal').classList.remove('open')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:720px;max-height:85vh;overflow-y:auto;">
+    <span class="modal-close" onclick="document.getElementById('bl-response-modal').classList.remove('open')">✕</span>
+    <h3 style="margin-bottom:1.25rem;">Assessment Responses</h3>
+    <div id="bl-response-modal-body"></div>
   </div>
 </div>
 
@@ -1995,6 +2132,7 @@ function ensureAdminTabs() {
     <button class="admin-tab" onclick="adminNavTo('stats')">Course Stats</button>
     <button class="admin-tab" onclick="adminNavTo('submissions')">Task Submissions</button>
     <button class="admin-tab" onclick="adminNavTo('announcements')">📣 Announcements</button>
+    <button class="admin-tab" onclick="adminNavTo('baseline')">🧪 Baseline</button>
   </div>`;
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
@@ -2097,6 +2235,8 @@ async function loginUser(user) {
   renderApp();
   navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
+  // Init baseline after login
+  initBaseline();
 }
 
 function handleLogout() {
@@ -2134,6 +2274,7 @@ function showView(id) {
   if (id === 'view-player') el.style.display = 'grid';
   else if (id === 'view-auth' || id === 'view-welcome') el.style.display = 'flex';
   else el.style.display = 'block';
+  if (id !== 'view-baseline-tasking') clearInterval(blTimerInterval);
 }
 
 function navTo(page) {
@@ -3177,6 +3318,7 @@ function adminNavTo(panel) {
   if (panel === 'stats') renderAdminStats();
   if (panel === 'submissions') renderAdminSubmissions();
   if (panel === 'announcements') loadAnnouncementRecipients();
+  if (panel === 'baseline') loadBaselineAdmin();
 }
 
 // Inject tabs into admin on load (ensureAdminTabs also called on login)
@@ -3658,6 +3800,632 @@ async function renderAdminSubmissions() {
 }
 
 function refreshSubmissions() { renderAdminSubmissions(); }
+
+// ════════════════════════════════
+// BASELINE ASSESSMENT SYSTEM
+// ════════════════════════════════
+
+let blState = {
+  assessment: null,      // row from baseline_assessments
+  tasks: [],             // ordered task rows
+  attempts: {},          // taskId -> attempt row
+  currentTaskIdx: 0,
+  taskStartTime: null,
+  filterReadyOnly: true,
+};
+
+// ── Entry point ──────────────────────────────────────────────────────
+async function initBaseline() {
+  if (!appState.user || !appState.user.supabaseId || appState.isDemo || appState.isAdmin) return;
+  try {
+    const { data: existing } = await _supabase
+      .from('baseline_assessments')
+      .select('*')
+      .eq('user_id', appState.user.supabaseId)
+      .single();
+    blState.assessment = existing || null;
+    updateBaselineNavLabel();
+    // Override dashboard if not completed
+    renderDashboardOrBaseline();
+  } catch(e) {
+    // No assessment yet — that's fine
+    updateBaselineNavLabel();
+    renderDashboardOrBaseline();
+  }
+}
+
+function updateBaselineNavLabel() {
+  const label = document.getElementById('nav-baseline-label');
+  if (!label) return;
+  const a = blState.assessment;
+  if (!a) { label.textContent = 'Baseline Assessment'; return; }
+  if (a.status === 'completed') label.textContent = 'Baseline ✓';
+  else if (a.status === 'in_progress') label.textContent = `Baseline (${a.tasks_completed_count}/8)`;
+  else label.textContent = 'Baseline Assessment';
+}
+
+function renderDashboardOrBaseline() {
+  const a = blState.assessment;
+  const dashEl = document.getElementById('page-dashboard');
+  if (!dashEl) return;
+  if (!a || a.status !== 'completed') {
+    renderBaselineDashboard();
+  }
+  // If completed — normal dashboard shows
+}
+
+function renderBaselineDashboard() {
+  const dashEl = document.getElementById('page-dashboard');
+  if (!dashEl) return;
+  const a = blState.assessment;
+  const status = a ? a.status : 'not_started';
+  const done = a ? (a.tasks_completed_count || 0) : 0;
+  const pct = Math.round((done / 8) * 100);
+
+  const statusLabels = { not_started: 'Not Started', in_progress: 'In Progress', completed: 'Completed' };
+  const statusLabel = statusLabels[status] || 'Not Started';
+
+  dashEl.innerHTML = `
+    <div class="baseline-dashboard page-inner">
+      <!-- Hero -->
+      <div class="bl-hero fade-in">
+        <div class="bl-hero-tag">📋 Baseline Assessment Required</div>
+        <h2>Welcome, <span style="color:var(--cyan)">${appState.user.name.split(' ')[0]}</span> — let's establish your starting point.</h2>
+        <p>Before you begin, you'll complete a short set of baseline tasks. These help establish your starting point so we can measure your progress throughout the program.<br><br>
+        This isn't about getting everything right. Just approach each task with your best judgment based on what you know today.<br><br>
+        <strong style="color:var(--text);">Please do not use Google or any AI tools while completing these tasks.</strong> The goal is to understand how you think today — not to test your ability to look things up. This will not count against you in any way.<br><br>
+        These tasks reflect real AI evaluation work. Once you finish, your course unlock code will be emailed to you.</p>
+      </div>
+
+      <!-- Animated path -->
+      <div class="bl-path fade-in" id="bl-path-card">
+        <div class="bl-path-label">Your Learning Journey</div>
+        <div class="bl-path-nodes">
+          <div class="bl-path-line"><div class="bl-path-line-fill" id="bl-path-fill"></div></div>
+          ${[
+            { icon: '🧪', label: 'Baseline Tasks', active: status !== 'completed' },
+            { icon: '📚', label: 'Training Program', active: false },
+            { icon: '🎯', label: 'Post-Program Tasks', active: false },
+            { icon: '📈', label: 'Growth', active: false },
+          ].map((n,i) => `
+            <div class="bl-path-node" id="bl-node-${i}">
+              <div class="bl-path-node-icon ${n.active ? 'active-node' : ''}">${n.icon}</div>
+              <div class="bl-path-node-label">${n.label}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Overview + Status -->
+      <div class="bl-cards fade-in">
+        <div class="bl-card">
+          <div class="bl-card-title">Assessment Overview</div>
+          <div class="bl-overview-items">
+            <div class="bl-overview-item"><span>📋</span><span>8 evaluation tasks</span></div>
+            <div class="bl-overview-item"><span>⏱</span><span>Estimated 25–35 minutes</span></div>
+            <div class="bl-overview-item"><span>🔍</span><span>Compare responses, identify issues, explain reasoning</span></div>
+            <div class="bl-overview-item"><span>💾</span><span>Progress is saved automatically</span></div>
+          </div>
+        </div>
+        <div class="bl-card">
+          <div class="bl-card-title">Your Status</div>
+          <div class="bl-status-badge ${status}">${statusLabel}</div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.75rem;">${done} of 8 tasks completed</div>
+          <div class="progress-bar" style="margin-bottom:1rem;"><div class="progress-fill" style="width:${pct}%"></div></div>
+          ${status === 'completed' ?
+            `<button class="btn btn-outline btn-sm" onclick="viewBaselineReview()">Review My Responses →</button>` :
+            `<button class="btn btn-primary btn-full" onclick="enterBaselineAssessment()" style="margin-top:0.5rem;">${status === 'in_progress' ? 'Continue Assessment →' : 'Start Baseline Assessment →'}</button>`
+          }
+        </div>
+      </div>
+
+      <!-- Course lock notice -->
+      <div style="background:rgba(155,93,229,0.06);border:1px solid var(--border-v);border-radius:10px;padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem;">
+        <span style="font-size:1.5rem;">🔒</span>
+        <div style="font-size:0.88rem;color:var(--text-muted);line-height:1.6;">
+          <strong style="color:var(--text);">Courses are locked</strong> until you complete your baseline assessment and receive your course unlock code via email.
+        </div>
+      </div>
+    </div>`;
+
+  // Animate path nodes
+  setTimeout(() => {
+    [0,1,2,3].forEach((i, idx) => {
+      setTimeout(() => {
+        const node = document.getElementById(`bl-node-${i}`);
+        if (node) node.classList.add('visible');
+      }, idx * 250);
+    });
+    setTimeout(() => {
+      const fill = document.getElementById('bl-path-fill');
+      if (fill) fill.style.width = status === 'completed' ? '100%' : status === 'in_progress' ? '25%' : '8%';
+    }, 200);
+  }, 300);
+
+  initFadeIns();
+}
+
+// ── Enter tasking view ────────────────────────────────────────────────
+async function enterBaselineAssessment() {
+  const a = blState.assessment;
+  if (a && a.status === 'completed') { viewBaselineReview(); return; }
+  // Load tasks
+  await loadBaselineTasks();
+  if (!blState.tasks.length) {
+    showToast('error', '⚠', 'No baseline tasks available. Check back soon.');
+    return;
+  }
+  // Create or resume assessment
+  if (!blState.assessment) {
+    await createBaselineAssessment();
+  }
+  // Load existing attempts
+  await loadBaselineAttempts();
+  // Find current task
+  const done = blState.assessment ? (blState.assessment.tasks_completed_count || 0) : 0;
+  blState.currentTaskIdx = Math.min(done, blState.tasks.length - 1);
+  showView('view-baseline-tasking');
+  document.getElementById('view-baseline-tasking').style.display = 'block';
+  renderBaselineTask();
+}
+
+async function loadBaselineTasks() {
+  try {
+    // Get active task set
+    const { data: sets } = await _supabase.from('task_sets').select('id').eq('is_active', true).eq('phase', 'baseline').limit(1);
+    if (!sets || !sets.length) { blState.tasks = []; return; }
+    const setId = sets[0].id;
+    const { data: tasks } = await _supabase.from('tasks').select('*').eq('task_set_id', setId).eq('is_active', true).order('order_index');
+    blState.tasks = tasks || [];
+  } catch(e) {
+    console.warn('Failed to load tasks', e);
+    blState.tasks = [];
+  }
+}
+
+async function createBaselineAssessment() {
+  try {
+    const { data } = await _supabase.from('baseline_assessments').insert({
+      user_id: appState.user.supabaseId,
+      status: 'in_progress',
+      started_at: new Date().toISOString(),
+      tasks_completed_count: 0,
+      current_task_order: 1,
+      ready_for_unlock: false,
+      review_viewed: false,
+    }).select().single();
+    blState.assessment = data;
+  } catch(e) { console.warn('Failed to create assessment', e); }
+}
+
+async function loadBaselineAttempts() {
+  if (!blState.assessment) return;
+  try {
+    const { data } = await _supabase.from('task_attempts').select('*').eq('assessment_id', blState.assessment.id);
+    blState.attempts = {};
+    (data || []).forEach(a => { blState.attempts[a.task_id] = a; });
+  } catch(e) { console.warn('Failed to load attempts', e); }
+}
+
+// ── Task rendering ────────────────────────────────────────────────────
+function renderBaselineTask() {
+  const task = blState.tasks[blState.currentTaskIdx];
+  if (!task) { renderBaselineComplete(); return; }
+  const total = blState.tasks.length;
+  const idx = blState.currentTaskIdx;
+  const attempt = blState.attempts[task.id];
+  const isSubmitted = !!attempt?.submitted_at;
+  const pct = Math.round((idx / total) * 100);
+
+  // Update topbar
+  document.getElementById('bl-task-label').textContent = `Task ${idx + 1} of ${total}`;
+  document.getElementById('bl-task-pct').textContent = pct + '%';
+  document.getElementById('bl-progress-fill').style.width = pct + '%';
+  document.getElementById('bl-autosave-label').textContent = isSubmitted ? '✓ Submitted' : 'Auto-saving...';
+
+  blState.taskStartTime = Date.now();
+
+  const body = document.getElementById('baseline-body');
+  body.innerHTML = `
+    ${isSubmitted ? `<div class="task-submitted-banner show">✓ You've already submitted this task. Your answers are shown below.</div>` : ''}
+    <div class="task-header">
+      <span class="task-number-badge">Task ${idx + 1} of ${total}</span>
+      <span class="task-timer" id="bl-timer">0:00</span>
+    </div>
+    <div class="task-prompt-card">
+      <div class="task-prompt-label">Prompt</div>
+      <div class="task-prompt-text">${task.prompt_text}</div>
+    </div>
+    <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.75rem;font-style:italic;">Two AI responses were given to this prompt. Which is better?</div>
+    <div class="task-responses">
+      <div class="task-response-card ${isSubmitted ? 'locked-response' : ''} ${attempt?.selected_choice === 'A' ? 'selected' : ''}" id="bl-card-a" onclick="${isSubmitted ? '' : "selectBaselineChoice('A')"}">
+        <div class="task-response-header">
+          <span class="task-response-label">Response A</span>
+          <div class="task-response-check">${attempt?.selected_choice === 'A' ? '✓' : ''}</div>
+        </div>
+        <div class="task-response-body">${task.response_a}</div>
+      </div>
+      <div class="task-response-card ${isSubmitted ? 'locked-response' : ''} ${attempt?.selected_choice === 'B' ? 'selected' : ''}" id="bl-card-b" onclick="${isSubmitted ? '' : "selectBaselineChoice('B')"}">
+        <div class="task-response-header">
+          <span class="task-response-label">Response B</span>
+          <div class="task-response-check">${attempt?.selected_choice === 'B' ? '✓' : ''}</div>
+        </div>
+        <div class="task-response-body">${task.response_b}</div>
+      </div>
+    </div>
+    <div class="task-justification">
+      <label>Your Reasoning <span style="color:var(--text-dim);font-weight:400;text-transform:none;font-size:0.75rem;">(minimum 75 characters)</span></label>
+      <textarea id="bl-justification" placeholder="Explain your choice. What makes one response better than the other? Be specific about what you noticed." ${isSubmitted ? 'disabled' : ''}>${attempt?.justification || ''}</textarea>
+      <div class="char-count ${(attempt?.justification || '').length >= 75 ? 'ok' : ''}" id="bl-char-count">${(attempt?.justification || '').length} / 75 min</div>
+    </div>
+    <div class="task-error" id="bl-error-choice">Please select Response A or B.</div>
+    <div class="task-error" id="bl-error-justify">Please provide a more detailed explanation (at least 75 characters).</div>
+    <div class="task-nav-row">
+      <div style="display:flex;gap:0.5rem;">
+        ${idx > 0 ? `<button class="btn btn-ghost btn-sm" onclick="blNavTo(${idx - 1})">← Prev</button>` : ''}
+      </div>
+      <div style="display:flex;gap:0.75rem;align-items:center;">
+        <span class="task-autosave" id="bl-save-status"></span>
+        ${isSubmitted
+          ? (idx < total - 1
+              ? `<button class="btn btn-primary btn-sm" onclick="blNavTo(${idx + 1})">Next Task →</button>`
+              : `<button class="btn btn-primary btn-sm" onclick="renderBaselineComplete()">View Completion →</button>`)
+          : `<button class="btn btn-primary" onclick="submitBaselineTask()">Submit & Continue →</button>`
+        }
+      </div>
+    </div>`;
+
+  // Wire up auto-save and char count if not submitted
+  if (!isSubmitted) {
+    const ta = document.getElementById('bl-justification');
+    if (ta) {
+      ta.addEventListener('input', () => {
+        const len = ta.value.length;
+        const cc = document.getElementById('bl-char-count');
+        if (cc) { cc.textContent = `${len} / 75 min`; cc.className = `char-count ${len >= 75 ? 'ok' : ''}`; }
+        clearTimeout(ta._saveTimer);
+        ta._saveTimer = setTimeout(() => autoSaveBaseline(), 1500);
+      });
+    }
+    startBlTimer();
+  }
+}
+
+let blTimerInterval = null;
+function startBlTimer() {
+  clearInterval(blTimerInterval);
+  const start = Date.now();
+  blTimerInterval = setInterval(() => {
+    const el = document.getElementById('bl-timer');
+    if (!el) { clearInterval(blTimerInterval); return; }
+    const s = Math.floor((Date.now() - start) / 1000);
+    el.textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function selectBaselineChoice(choice) {
+  blState._pendingChoice = choice;
+  document.getElementById('bl-card-a')?.classList.toggle('selected', choice === 'A');
+  document.getElementById('bl-card-b')?.classList.toggle('selected', choice === 'B');
+  const checkA = document.querySelector('#bl-card-a .task-response-check');
+  const checkB = document.querySelector('#bl-card-b .task-response-check');
+  if (checkA) checkA.textContent = choice === 'A' ? '✓' : '';
+  if (checkB) checkB.textContent = choice === 'B' ? '✓' : '';
+  document.getElementById('bl-error-choice')?.classList.remove('show');
+  autoSaveBaseline();
+}
+
+async function autoSaveBaseline() {
+  const task = blState.tasks[blState.currentTaskIdx];
+  if (!task || !blState.assessment) return;
+  const justification = document.getElementById('bl-justification')?.value || '';
+  const choice = blState._pendingChoice || blState.attempts[task.id]?.selected_choice;
+  const saveEl = document.getElementById('bl-save-status');
+  if (saveEl) saveEl.textContent = 'Saving...';
+  try {
+    await _supabase.from('task_attempts').upsert({
+      assessment_id: blState.assessment.id,
+      user_id: appState.user.supabaseId,
+      task_id: task.id,
+      selected_choice: choice || null,
+      justification,
+      started_at: blState.attempts[task.id]?.started_at || new Date().toISOString(),
+    }, { onConflict: 'assessment_id,task_id' });
+    if (saveEl) saveEl.textContent = '✓ Saved';
+  } catch(e) { if (saveEl) saveEl.textContent = ''; }
+}
+
+async function submitBaselineTask() {
+  const task = blState.tasks[blState.currentTaskIdx];
+  const choice = blState._pendingChoice || blState.attempts[task.id]?.selected_choice;
+  const justification = document.getElementById('bl-justification')?.value?.trim() || '';
+  let valid = true;
+
+  if (!choice) { document.getElementById('bl-error-choice')?.classList.add('show'); valid = false; }
+  if (justification.length < 75) { document.getElementById('bl-error-justify')?.classList.add('show'); valid = false; }
+  if (!valid) return;
+
+  clearInterval(blTimerInterval);
+  const timeSpent = Math.round((Date.now() - blState.taskStartTime) / 1000);
+  const now = new Date().toISOString();
+  const isCorrect = choice === task.correct_choice;
+
+  try {
+    // Upsert attempt as submitted
+    const { data: attempt } = await _supabase.from('task_attempts').upsert({
+      assessment_id: blState.assessment.id,
+      user_id: appState.user.supabaseId,
+      task_id: task.id,
+      selected_choice: choice,
+      justification,
+      started_at: blState.attempts[task.id]?.started_at || now,
+      submitted_at: now,
+      time_spent_seconds: timeSpent,
+      is_correct: isCorrect,
+    }, { onConflict: 'assessment_id,task_id' }).select().single();
+
+    blState.attempts[task.id] = attempt;
+
+    // Award XP (check duplicate)
+    const xpSource = `baseline-task-${task.id}`;
+    const { data: existingXp } = await _supabase.from('xp_events').select('id').eq('user_id', appState.user.supabaseId).eq('source_id', xpSource).limit(1);
+    if (!existingXp || !existingXp.length) {
+      await _supabase.from('xp_events').insert({ user_id: appState.user.supabaseId, source_type: 'baseline_task', source_id: xpSource, xp_amount: 20 });
+      addXP(20);
+      spawnXPPop('+20 XP');
+    }
+
+    // Update assessment progress
+    const newCount = (blState.assessment.tasks_completed_count || 0) + 1;
+    const newOrder = newCount + 1;
+    const isLast = newCount >= blState.tasks.length;
+    const updatePayload = {
+      tasks_completed_count: newCount,
+      current_task_order: newOrder,
+      ...(isLast ? {
+        status: 'completed',
+        completed_at: now,
+        ready_for_unlock: true,
+        baseline_total_time_seconds: (blState.assessment.baseline_total_time_seconds || 0) + timeSpent,
+      } : { status: 'in_progress' })
+    };
+    await _supabase.from('baseline_assessments').update(updatePayload).eq('id', blState.assessment.id);
+    blState.assessment = { ...blState.assessment, ...updatePayload };
+    blState._pendingChoice = null;
+
+    if (isLast) {
+      // Bonus XP
+      const bonusSource = 'baseline-complete';
+      const { data: existingBonus } = await _supabase.from('xp_events').select('id').eq('user_id', appState.user.supabaseId).eq('source_id', bonusSource).limit(1);
+      if (!existingBonus || !existingBonus.length) {
+        await _supabase.from('xp_events').insert({ user_id: appState.user.supabaseId, source_type: 'baseline_complete', source_id: bonusSource, xp_amount: 100 });
+        addXP(100);
+        spawnXPPop('+100 XP');
+        showMilestoneBanner('🎉', 'Baseline complete! +100 XP bonus');
+      }
+      renderBaselineComplete();
+    } else {
+      blState.currentTaskIdx++;
+      renderBaselineTask();
+    }
+  } catch(e) {
+    console.error('Submit failed', e);
+    showToast('error', '⚠', 'Save failed. Please try again.');
+  }
+}
+
+function blNavTo(idx) {
+  clearInterval(blTimerInterval);
+  blState.currentTaskIdx = idx;
+  blState._pendingChoice = null;
+  renderBaselineTask();
+}
+
+function renderBaselineComplete() {
+  clearInterval(blTimerInterval);
+  const body = document.getElementById('baseline-body');
+  document.getElementById('bl-task-label').textContent = 'Complete!';
+  document.getElementById('bl-progress-fill').style.width = '100%';
+  document.getElementById('bl-task-pct').textContent = '100%';
+
+  body.innerHTML = `
+    <div class="bl-complete">
+      <div class="bl-complete-icon">🎉</div>
+      <h3>You're all set.</h3>
+      <p>Your baseline has been recorded.<br><br>
+      You can now review your responses to see what strong evaluation looks like and what to start watching for.<br><br>
+      <strong style="color:var(--text);">Your course unlock code will be emailed to you shortly.</strong></p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="viewBaselineReview()">Review My Responses →</button>
+        <button class="btn btn-ghost" onclick="exitBaselineToHome()">Back to Dashboard</button>
+      </div>
+    </div>`;
+}
+
+async function viewBaselineReview() {
+  // Mark review viewed
+  if (blState.assessment?.id) {
+    await _supabase.from('baseline_assessments').update({ review_viewed: true }).eq('id', blState.assessment.id);
+  }
+  // Make sure tasks + attempts are loaded
+  if (!blState.tasks.length) await loadBaselineTasks();
+  if (!Object.keys(blState.attempts).length) await loadBaselineAttempts();
+
+  const body = document.getElementById('baseline-body');
+  document.getElementById('bl-task-label').textContent = 'Review';
+  document.getElementById('bl-progress-fill').style.width = '100%';
+
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;">
+      <h2 style="font-size:1.2rem;font-weight:800;letter-spacing:-0.01em;">Response Review</h2>
+      <button class="btn btn-ghost btn-sm" onclick="exitBaselineToHome()">← Back to Dashboard</button>
+    </div>
+    <div style="background:rgba(0,229,200,0.05);border:1px solid rgba(0,229,200,0.2);border-radius:8px;padding:0.9rem 1.1rem;margin-bottom:1.5rem;font-size:0.88rem;color:var(--text-muted);line-height:1.6;">
+      Here's what strong evaluation looks like on each task. Use this to calibrate your thinking before you begin the training program.
+    </div>
+    ${blState.tasks.map((task, i) => {
+      const attempt = blState.attempts[task.id];
+      const chosen = attempt?.selected_choice;
+      const correct = task.correct_choice;
+      const isCorrect = chosen === correct;
+      return `
+        <div class="bl-review-task">
+          <div class="bl-review-task-header">
+            <span class="task-number-badge">Task ${i + 1}</span>
+            ${chosen ? `<span class="bl-review-chosen ${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '✓ Strong choice' : '△ See explanation'}</span>` : ''}
+          </div>
+          <div class="bl-review-section">Prompt</div>
+          <div class="bl-review-text">${task.prompt_text}</div>
+          ${chosen ? `
+            <div class="bl-review-section">Your Choice</div>
+            <div class="bl-review-text">Response ${chosen}</div>
+            <div class="bl-review-section">Your Reasoning</div>
+            <div class="bl-review-text" style="font-style:italic;">"${attempt.justification}"</div>
+          ` : '<div class="bl-review-text" style="color:var(--text-dim);">Not submitted</div>'}
+          <div class="bl-review-section">Stronger Response</div>
+          <div class="bl-review-text"><strong style="color:var(--cyan);">Response ${correct}</strong></div>
+          <div class="bl-review-explanation"><strong>Why:</strong> ${task.explanation}</div>
+        </div>`;
+    }).join('')}
+    <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+      <button class="btn btn-ghost btn-sm" onclick="exitBaselineToHome()">← Back to Dashboard</button>
+    </div>`;
+}
+
+function exitBaselineToHome() {
+  clearInterval(blTimerInterval);
+  updateBaselineNavLabel();
+  showView('view-app');
+  renderApp();
+  navTo('dashboard');
+}
+
+// ── Admin baseline panel ──────────────────────────────────────────────
+let blAdminFilterReady = true;
+
+function toggleBaselineFilter() {
+  blAdminFilterReady = !blAdminFilterReady;
+  const btn = document.getElementById('bl-filter-btn');
+  if (btn) btn.textContent = blAdminFilterReady ? 'Filter: Ready to Unlock' : 'Filter: All';
+  loadBaselineAdmin();
+}
+
+async function loadBaselineAdmin() {
+  const loading = document.getElementById('bl-admin-loading');
+  const list = document.getElementById('bl-admin-list');
+  if (!loading || !list) return;
+  loading.style.display = 'block'; list.style.display = 'none';
+
+  try {
+    let query = _supabase.from('baseline_assessments').select('*').order('completed_at', { ascending: false });
+    if (blAdminFilterReady) query = query.eq('ready_for_unlock', true).is('unlock_code_sent_at', null);
+
+    const { data: assessments } = await query;
+    const { data: profiles } = await _supabase.from('profiles').select('id, full_name, email');
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p; });
+
+    loading.style.display = 'none'; list.style.display = 'block';
+
+    if (!assessments || !assessments.length) {
+      list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted);font-size:0.88rem;">${blAdminFilterReady ? 'No assessments ready for unlock yet.' : 'No assessments found.'}</div>`;
+      return;
+    }
+
+    list.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;overflow:hidden;">
+        <div class="bl-admin-row header">
+          <div>Name</div><div>Email</div><div>Progress</div><div>Status</div><div>Completed</div><div>Ready</div><div>Code Sent</div><div>Actions</div>
+        </div>
+        ${assessments.map(a => {
+          const p = profileMap[a.user_id] || {};
+          const name = p.full_name || '—';
+          const email = p.email || '—';
+          const completed = a.completed_at ? new Date(a.completed_at).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : '—';
+          return `
+            <div class="bl-admin-row">
+              <div style="font-weight:500;font-size:0.85rem;">${name}</div>
+              <div style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${email}</div>
+              <div style="color:var(--cyan);">${a.tasks_completed_count || 0}/8</div>
+              <div><span class="bl-status-pill ${a.status}">${a.status.replace('_',' ')}</span></div>
+              <div style="color:var(--text-dim);font-size:0.78rem;">${completed}</div>
+              <div>${a.ready_for_unlock ? '<span style="color:var(--cyan);">✓ Yes</span>' : '<span style="color:var(--text-dim);">No</span>'}</div>
+              <div>${a.unlock_code_sent_at ? '<span style="color:var(--cyan);font-size:0.78rem;">Sent</span>' : '<span style="color:var(--text-dim);font-size:0.78rem;">—</span>'}</div>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap;">
+                <button class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;" onclick="viewBaselineResponses('${a.id}','${name}')">View</button>
+                ${!a.unlock_code_sent_at ? `<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;background:rgba(0,229,200,0.12);color:var(--cyan);border:1px solid rgba(0,229,200,0.3);" onclick="markCodeSent('${a.id}')">Mark Sent</button>` : ''}
+                ${!a.course_access_unlocked ? `<button class="btn btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;background:rgba(155,93,229,0.12);color:var(--violet);border:1px solid var(--border-v);" onclick="toggleCourseAccess('${a.id}', true)">Unlock</button>` : `<button class="btn btn-ghost btn-sm" style="font-size:0.7rem;padding:0.25rem 0.55rem;" onclick="toggleCourseAccess('${a.id}', false)">Revoke</button>`}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  } catch(e) {
+    loading.textContent = 'Failed to load. Check Supabase connection.';
+    loading.style.color = '#ff6b6b';
+  }
+}
+
+async function markCodeSent(assessmentId) {
+  await _supabase.from('baseline_assessments').update({ unlock_code_sent_at: new Date().toISOString(), unlock_code_sent_by: appState.user.email }).eq('id', assessmentId);
+  showToast('success', '✓', 'Marked as code sent.');
+  loadBaselineAdmin();
+}
+
+async function toggleCourseAccess(assessmentId, val) {
+  await _supabase.from('baseline_assessments').update({ course_access_unlocked: val }).eq('id', assessmentId);
+  showToast('success', val ? '🔓' : '🔒', val ? 'Course access unlocked.' : 'Course access revoked.');
+  loadBaselineAdmin();
+}
+
+async function viewBaselineResponses(assessmentId, studentName) {
+  const modal = document.getElementById('bl-response-modal');
+  const body = document.getElementById('bl-response-modal-body');
+  if (!modal || !body) return;
+  body.innerHTML = '<div style="color:var(--text-muted);padding:1rem 0;">Loading...</div>';
+  modal.classList.add('open');
+
+  try {
+    const { data: attempts } = await _supabase.from('task_attempts').select('*, tasks(*)').eq('assessment_id', assessmentId).order('started_at');
+    if (!attempts || !attempts.length) { body.innerHTML = '<div style="color:var(--text-muted);">No responses found.</div>'; return; }
+
+    body.innerHTML = `
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem;">${studentName} · ${attempts.length} responses</div>
+      ${attempts.map((a, i) => {
+        const t = a.tasks || {};
+        const isCorrect = a.selected_choice === t.correct_choice;
+        return `
+          <div style="background:var(--bg3);border:1px solid var(--border-w);border-radius:8px;padding:1.25rem;margin-bottom:1rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+              <span class="task-number-badge">Task ${i+1}</span>
+              <span class="bl-review-chosen ${isCorrect ? 'correct' : 'incorrect'}">${isCorrect ? '✓ Correct' : '✗ Incorrect'}</span>
+            </div>
+            <div class="bl-review-section">Prompt</div>
+            <div class="bl-review-text">${t.prompt_text || '—'}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+              <div>
+                <div class="bl-review-section">Response A</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;">${t.response_a || '—'}</div>
+              </div>
+              <div>
+                <div class="bl-review-section">Response B</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6;">${t.response_b || '—'}</div>
+              </div>
+            </div>
+            <div class="bl-review-section">Student Chose</div>
+            <div class="bl-review-text"><strong style="color:${isCorrect ? 'var(--cyan)' : '#ff6b6b'};">Response ${a.selected_choice}</strong> · Correct: Response ${t.correct_choice}</div>
+            <div class="bl-review-section">Justification</div>
+            <div class="bl-review-text" style="font-style:italic;">"${a.justification}"</div>
+            <div class="bl-review-section" style="margin-top:0.75rem;">Explanation</div>
+            <div class="bl-review-explanation">${t.explanation || '—'}</div>
+            ${a.time_spent_seconds ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:0.5rem;">⏱ ${Math.floor(a.time_spent_seconds/60)}m ${a.time_spent_seconds%60}s</div>` : ''}
+          </div>`;
+      }).join('')}`;
+  } catch(e) {
+    body.innerHTML = '<div style="color:#ff6b6b;">Failed to load responses.</div>';
+  }
+}
+
+// ── Hook into loginUser / renderApp ──────────────────────────────────
+// (called after initBaseline is wired into loginUser below)
 
 // ════════════════════════════════
 // ANNOUNCEMENTS
@@ -4268,6 +5036,17 @@ function isPilotUnlocked() {
 
 function handleCourseClick(courseId) {
   if (!isPilotUnlocked()) { checkPilotAccess(); return; }
+  // Block if baseline not completed
+  const a = blState.assessment;
+  if (!appState.isAdmin && !appState.isImpersonating && !appState.isDemo) {
+    if (!a || a.status !== 'completed') {
+      showLockedModal(
+        'Complete Your Baseline First',
+        'Complete your baseline assessment to receive your course unlock code. Once you have the code, you can access the courses.'
+      );
+      return;
+    }
+  }
   const course = courses.find(c => c.id === courseId);
   if (course && course.locked && !appState.isAdmin && !appState.isImpersonating) {
     showLockedModal(
