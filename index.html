@@ -696,13 +696,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
         </div>
 
-        <div class="welcome-callout fade-in" id="welcome-callout" style="display:none;">
-          <div class="welcome-callout-text">👋 <strong>New here?</strong> Watch the welcome video to get oriented before you start.</div>
-          <div style="display:flex;gap:0.75rem;align-items:center;">
-            <button class="btn btn-primary btn-sm" onclick="showWelcomeVideo()">Watch Now →</button>
-            <button class="welcome-skip" onclick="dismissWelcomeCallout()">Dismiss</button>
-          </div>
-        </div>
         <div class="stats-row fade-in">
           <div class="stat-card c"><div class="stat-icon">⚡</div><div class="stat-val" id="stat-xp">0</div><div class="stat-name">Total XP Earned</div></div>
           <div class="stat-card v"><div class="stat-icon">◈</div><div class="stat-val" id="stat-lessons">0</div><div class="stat-name">Lessons Completed</div></div>
@@ -731,6 +724,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <!-- ── MY COURSES PAGE ── -->
       <div class="page-inner" id="page-my-courses" style="display:none;">
         <div class="section-head"><h3>My Courses</h3><span class="section-tag">all enrolled</span></div>
+        <!-- Welcome video card -->
+        <div class="welcome-callout fade-in" id="welcome-video-card" style="margin-bottom:1.5rem;cursor:pointer;" onclick="showWelcomeVideo()">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <div style="width:42px;height:42px;border-radius:8px;background:rgba(0,229,200,0.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;">▶</div>
+            <div class="welcome-callout-text"><strong>Start here — Welcome Video</strong><br><span style="font-size:0.82rem;">A quick intro to Learning Craft AI and what to expect from this program.</span></div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showWelcomeVideo()">Watch →</button>
+        </div>
         <div class="courses-row" id="my-courses-grid"></div>
       </div>
 
@@ -1073,7 +1074,7 @@ let courses = [
     lessons: [
       {
         id: 'l1', title: 'What Is a Language Model?', type: 'video',
-        videoUrl: '',
+        videoUrl: 'https://app.heygen.com/embeds/f19ba0df3bdf45fd85adf81e6af2edb9',
         content: 'A language model is a type of AI that has been trained to understand and generate human language. But it did not learn on its own — it learned from massive amounts of text written by humans, and from human feedback on its outputs. Before you can contribute to AI training, you need to understand what you are actually building. This lesson covers what language models are, how they generate responses, and why they need human input to improve.',
         keyPoints: [
           'Language models predict the most likely next word based on patterns learned from training data',
@@ -1873,8 +1874,7 @@ function dismissWelcome() {
   markWelcomeSeen();
   showView('view-app');
   renderApp();
-  navTo('dashboard');
-  updateWelcomeCallout();
+  navTo('my-courses');
 }
 function dismissWelcomeCallout() {
   markWelcomeSeen();
@@ -1891,13 +1891,9 @@ async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
   await loadLeaderboard();
-  if (shouldShowWelcome()) {
-    showView('view-welcome');
-  } else {
-    showView('view-app');
-    renderApp();
-    navigateAfterLogin();
-  }
+  showView('view-app');
+  renderApp();
+  navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
 }
 
