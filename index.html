@@ -477,6 +477,43 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .welcome-callout-text{font-size:0.88rem;color:var(--text-muted);}
 .welcome-callout-text strong{color:var(--cyan);}
 
+/* ── INTERACTIVE LESSON ── */
+.interactive-wrap{background:var(--bg2);border:1px solid var(--border-w);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;}
+.interactive-setup{padding:1.5rem 1.75rem 1.25rem;}
+.interactive-label{font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;}
+.interactive-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 6px var(--cyan);display:inline-block;}
+.interactive-scenario{font-size:0.88rem;color:var(--text-muted);line-height:1.6;margin-bottom:1.1rem;}
+.chat-bubble-wrap{display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1.25rem;}
+.chat-bubble-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg3);border:1px solid var(--border-w);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;margin-top:2px;}
+.chat-bubble{background:var(--bg3);border:1px solid var(--border-w);border-radius:0 10px 10px 10px;padding:0.75rem 1rem;font-size:0.9rem;color:var(--text);line-height:1.55;max-width:480px;}
+.interactive-instruction{font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;font-style:italic;}
+.response-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:0 1.75rem 1.5rem;}
+.response-card{border-radius:8px;border:1.5px solid var(--border-w);background:var(--bg3);cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.response-card:hover{border-color:rgba(155,93,229,0.4);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,0.3);}
+.response-card.selected-correct{border-color:var(--cyan);background:rgba(0,229,200,0.05);}
+.response-card.selected-wrong{border-color:#ff6b6b;background:rgba(255,107,107,0.05);}
+.response-card.reveal-correct{border-color:var(--cyan);background:rgba(0,229,200,0.05);}
+.response-card-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem 0.5rem;border-bottom:1px solid var(--border-w);}
+.response-card-label{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);}
+.response-card-badge{font-size:0.75rem;display:none;}
+.response-card.selected-correct .response-card-badge.correct-badge{display:block;color:var(--cyan);}
+.response-card.selected-wrong .response-card-badge.wrong-badge{display:block;color:#ff6b6b;}
+.response-card.reveal-correct .response-card-badge.correct-badge{display:block;color:var(--cyan);}
+.response-card-body{padding:0.85rem 1rem;font-size:0.875rem;line-height:1.65;color:var(--text-muted);}
+.response-card.selected-correct .response-card-body,.response-card.reveal-correct .response-card-body{color:var(--text);}
+.feedback-wrap{margin:0 1.75rem 1.5rem;border-radius:8px;padding:1.1rem 1.25rem;display:none;animation:fadeSlideUp 0.35s ease;}
+.feedback-wrap.show{display:block;}
+.feedback-wrap.correct{background:rgba(0,229,200,0.06);border:1px solid rgba(0,229,200,0.25);}
+.feedback-wrap.wrong{background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.2);}
+.feedback-heading{font-size:0.82rem;font-weight:700;margin-bottom:0.4rem;}
+.feedback-wrap.correct .feedback-heading{color:var(--cyan);}
+.feedback-wrap.wrong .feedback-heading{color:#ff6b6b;}
+.feedback-body{font-size:0.875rem;line-height:1.65;color:var(--text-muted);}
+.feedback-takeaway{margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid var(--border-w);font-size:0.85rem;font-weight:600;color:var(--text);line-height:1.5;}
+.feedback-takeaway::before{content:'→  ';}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@media(max-width:700px){.response-grid{grid-template-columns:1fr;}}
+
 /* ── ANIMATIONS ── */
 .fade-in{opacity:0;transform:translateY(14px);transition:opacity 0.5s ease,transform 0.5s ease;}
 .fade-in.visible{opacity:1;transform:translateY(0);}
@@ -1114,6 +1151,10 @@ let courses = [
           'Human feedback is what makes a model helpful, safe, and accurate — not just statistically likely',
           'Every evaluation you submit teaches the model something about what good looks like'
         ]
+      },
+      {
+        id: 'l1i', title: 'Quick Check: Prediction vs. Judgment', type: 'interactive',
+        videoUrl: '', content: '', keyPoints: []
       },
       {
         id: 'l2', title: 'How AI Models Learn: RLHF Explained', type: 'video',
@@ -2245,6 +2286,8 @@ function loadLesson(idx) {
 
   if (lesson.type === 'quiz') {
     body.innerHTML = renderQuizHTML(course, idx);
+  } else if (lesson.type === 'interactive') {
+    body.innerHTML = renderInteractiveHTML(course, lesson, idx);
   } else if (lesson.type === 'practice') {
     body.innerHTML = `
       <div class="player-meta">
@@ -2290,6 +2333,99 @@ function loadLesson(idx) {
         <button class="btn btn-primary" onclick="completeLesson(${idx})">Mark Complete & Continue <span class="arrow">→</span></button>
       </div>`;
   }
+}
+
+function renderInteractiveHTML(course, lesson, idx) {
+  // Only defined for Course 1 Lesson 1 interactive — extensible later
+  if (lesson.id === 'l1i' && course.id === 'course-1') {
+    return `
+      <div class="player-meta">
+        <div class="meta-chip"><span>🎯</span><span class="chip-val">Quick Check</span></div>
+        <div class="meta-chip gold"><span>⚡</span><span class="chip-val">+25 XP</span><span>for completing</span></div>
+      </div>
+      <div class="interactive-wrap">
+        <div class="interactive-setup">
+          <div class="interactive-label">Quick Check</div>
+          <div class="interactive-scenario">You just learned that language models predict the next word based on patterns — not understanding. Now see if you can spot the difference in practice.</div>
+          <div class="chat-bubble-wrap">
+            <div class="chat-bubble-avatar">👤</div>
+            <div class="chat-bubble">I've been really stressed about money lately and I don't know where to start. What should I do?</div>
+          </div>
+          <div class="interactive-instruction">Two AI systems responded to the same message. Which response would actually help this person?</div>
+        </div>
+        <div class="response-grid">
+          <div class="response-card" id="ic-card-a" onclick="selectInteractiveAnswer('a')">
+            <div class="response-card-header">
+              <span class="response-card-label">Response A</span>
+              <span class="response-card-badge correct-badge">✓ Better response</span>
+              <span class="response-card-badge wrong-badge">✗ Not this one</span>
+            </div>
+            <div class="response-card-body">That sounds really overwhelming — money stress is one of the hardest kinds because it touches everything. A good first step is just getting a clear picture of where things stand: what's coming in, what's going out, and what feels most urgent. Would it help to start there?</div>
+          </div>
+          <div class="response-card" id="ic-card-b" onclick="selectInteractiveAnswer('b')">
+            <div class="response-card-header">
+              <span class="response-card-label">Response B</span>
+              <span class="response-card-badge correct-badge">✓ Better response</span>
+              <span class="response-card-badge wrong-badge">✗ Not this one</span>
+            </div>
+            <div class="response-card-body">Financial stress is a common experience with significant psychological and physiological effects. Effective financial management strategies include budgeting frameworks such as the 50/30/20 rule, debt reduction methodologies including the avalanche and snowball methods, and emergency fund establishment targeting 3–6 months of expenses.</div>
+          </div>
+        </div>
+        <div class="feedback-wrap correct" id="ic-feedback-correct">
+          <div class="feedback-heading">✓ That's right — and here's why it matters.</div>
+          <div class="feedback-body">Response B is statistically plausible — it contains real financial advice that sounds authoritative. But it doesn't address what this person actually asked. They said they were stressed and didn't know where to start. Response A heard that.<br><br>A language model running on pure prediction will often produce Response B. It's seen thousands of personal finance articles. It's matching patterns. Response A required something different: understanding the person's emotional state and what they actually needed to hear first.<br><br>That gap — between what sounds right and what actually helps — is exactly what you're being trained to close.</div>
+          <div class="feedback-takeaway">Your judgment is what turns pattern prediction into something genuinely useful. That's the job.</div>
+        </div>
+        <div class="feedback-wrap wrong" id="ic-feedback-wrong">
+          <div class="feedback-heading">Not quite — take another look.</div>
+          <div class="feedback-body">Response B contains accurate information, but accuracy alone isn't what makes a response helpful. The person said they were stressed and didn't know where to start. Response B ignored both of those things and produced a structured financial overview instead.<br><br>That's what pure pattern prediction does — it matches content to topic, not response to person. Response A actually addressed what was asked: the overwhelm, the not knowing where to begin, the need for a human entry point before the strategy.<br><br>This is the gap you'll be evaluating on every platform task.</div>
+          <div class="feedback-takeaway">Helpful means it served this specific person in this specific moment — not just that it was technically correct.</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;">
+        <button class="btn btn-primary" id="ic-continue-btn" onclick="completeLesson(${idx})" style="display:none;">Continue <span class="arrow">→</span></button>
+      </div>`;
+  }
+  return '<p style="color:var(--text-muted);">Interactive content coming soon.</p>';
+}
+
+function selectInteractiveAnswer(choice) {
+  const cardA = document.getElementById('ic-card-a');
+  const cardB = document.getElementById('ic-card-b');
+  const feedbackCorrect = document.getElementById('ic-feedback-correct');
+  const feedbackWrong = document.getElementById('ic-feedback-wrong');
+  const continueBtn = document.getElementById('ic-continue-btn');
+  if (!cardA || !cardB) return;
+  // Already answered
+  if (cardA.classList.contains('selected-correct') || cardA.classList.contains('selected-wrong')) return;
+
+  const isCorrect = choice === 'a';
+
+  if (isCorrect) {
+    cardA.classList.add('selected-correct');
+    cardB.classList.add('reveal-correct');
+    feedbackCorrect.classList.add('show');
+    addXP(25);
+    spawnXPPop('+25 XP');
+    showMilestoneBanner('🎯', 'Nice judgment call! +25 XP');
+  } else {
+    cardB.classList.add('selected-wrong');
+    cardA.classList.add('reveal-correct');
+    feedbackWrong.classList.add('show');
+  }
+
+  // Disable further clicks
+  cardA.style.cursor = 'default';
+  cardB.style.cursor = 'default';
+  cardA.style.transform = '';
+  cardB.style.transform = '';
+
+  // Show continue button and scroll to feedback
+  if (continueBtn) continueBtn.style.display = 'inline-flex';
+  setTimeout(() => {
+    const fb = isCorrect ? feedbackCorrect : feedbackWrong;
+    fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 200);
 }
 
 function getDemoHeroImage(lessonId) {
