@@ -1941,13 +1941,9 @@ async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
   await loadLeaderboard();
-  if (shouldShowWelcome()) {
-    showView('view-welcome');
-  } else {
-    showView('view-app');
-    renderApp();
-    navigateAfterLogin();
-  }
+  showView('view-app');
+  renderApp();
+  navigateAfterLogin();
   showToast('success','✓', `Welcome back, ${user.name}!`);
 }
 
