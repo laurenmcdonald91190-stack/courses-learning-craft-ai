@@ -911,6 +911,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <a class="nav-item" onclick="adminNavTo('students')"><span class="nav-icon">⊞</span> Students</a>
         <a class="nav-item" onclick="adminNavTo('stats')"><span class="nav-icon">📊</span> Course Stats</a>
         <a class="nav-item" onclick="adminNavTo('submissions')"><span class="nav-icon">🗂️</span> Task Submissions</a>
+        <a class="nav-item" onclick="adminNavTo('announcements')"><span class="nav-icon">📣</span> Announcements</a>
       </nav>
       <div class="sidebar-bottom">
         <button class="btn btn-ghost btn-sm btn-full" onclick="handleLogout()">Sign Out</button>
@@ -1016,6 +1017,45 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
           <div id="admin-submissions-loading" style="color:var(--text-muted);font-size:0.88rem;padding:1rem 0;">Loading submissions...</div>
           <div id="admin-submissions-list" style="display:none;"></div>
+        </div>
+
+        <!-- Announcements panel -->
+        <div id="admin-panel-announcements" class="admin-panel">
+          <div class="section-head" style="margin-bottom:1.5rem;">
+            <h3>Send Announcement</h3>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border-w);border-radius:10px;padding:1.75rem;max-width:680px;">
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6;">
+              This will send an email to all enrolled students. Use it to announce new lessons, platform updates, or anything else your pilot group needs to know.
+            </div>
+            <div class="field-group">
+              <label>From Name</label>
+              <input type="text" id="ann-from-name" value="Lauren McDonald" placeholder="Your name">
+            </div>
+            <div class="field-group">
+              <label>Subject Line</label>
+              <input type="text" id="ann-subject" placeholder="e.g. New lesson available — How AI Models Learn">
+            </div>
+            <div class="field-group">
+              <label>Message</label>
+              <textarea id="ann-body" style="min-height:180px;line-height:1.65;" placeholder="Write your message here. Keep it clear and direct — students appreciate brevity."></textarea>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.5rem;flex-wrap:wrap;gap:1rem;">
+              <div id="ann-recipient-count" style="font-size:0.8rem;color:var(--text-muted);">Loading recipient count...</div>
+              <div style="display:flex;gap:0.75rem;align-items:center;">
+                <button class="btn btn-ghost btn-sm" onclick="previewAnnouncement()">Preview</button>
+                <button class="btn btn-primary" id="ann-send-btn" onclick="sendAnnouncement()">Send to All Students <span class="arrow">→</span></button>
+              </div>
+            </div>
+            <div id="ann-preview" style="display:none;margin-top:1.5rem;border-top:1px solid var(--border-w);padding-top:1.5rem;">
+              <div style="font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.75rem;">Email Preview</div>
+              <div style="background:var(--bg3);border:1px solid var(--border-w);border-radius:8px;padding:1.25rem;">
+                <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.25rem;">From: <span id="prev-from" style="color:var(--text-muted);"></span></div>
+                <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:1rem;">Subject: <span id="prev-subject" style="color:var(--text);font-weight:600;"></span></div>
+                <div id="prev-body" style="font-size:0.88rem;color:var(--text-muted);line-height:1.7;white-space:pre-wrap;"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -1954,6 +1994,7 @@ function ensureAdminTabs() {
     <button class="admin-tab" onclick="adminNavTo('students')">Students</button>
     <button class="admin-tab" onclick="adminNavTo('stats')">Course Stats</button>
     <button class="admin-tab" onclick="adminNavTo('submissions')">Task Submissions</button>
+    <button class="admin-tab" onclick="adminNavTo('announcements')">📣 Announcements</button>
   </div>`;
   inner.insertBefore(document.createRange().createContextualFragment(tabsHtml), inner.querySelector('.admin-panel'));
 }
@@ -3135,6 +3176,7 @@ function adminNavTo(panel) {
   if (panel === 'students') renderAdminStudents();
   if (panel === 'stats') renderAdminStats();
   if (panel === 'submissions') renderAdminSubmissions();
+  if (panel === 'announcements') loadAnnouncementRecipients();
 }
 
 // Inject tabs into admin on load (ensureAdminTabs also called on login)
@@ -3616,6 +3658,84 @@ async function renderAdminSubmissions() {
 }
 
 function refreshSubmissions() { renderAdminSubmissions(); }
+
+// ════════════════════════════════
+// ANNOUNCEMENTS
+// ════════════════════════════════
+async function loadAnnouncementRecipients() {
+  try {
+    const { data: profiles } = await _supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('role', 'student');
+    const students = (profiles || []).filter(p => !ADMIN_EMAILS.includes(p.email.toLowerCase()));
+    const countEl = document.getElementById('ann-recipient-count');
+    if (countEl) countEl.textContent = `${students.length} student${students.length !== 1 ? 's' : ''} will receive this email`;
+    return students.map(p => p.email);
+  } catch(e) {
+    console.warn('Could not load recipients', e);
+    return [];
+  }
+}
+
+function previewAnnouncement() {
+  const subject = document.getElementById('ann-subject')?.value.trim();
+  const body = document.getElementById('ann-body')?.value.trim();
+  const fromName = document.getElementById('ann-from-name')?.value.trim() || 'Lauren McDonald';
+  const preview = document.getElementById('ann-preview');
+  if (!subject || !body) { showToast('error', '⚠', 'Add a subject and message before previewing.'); return; }
+  document.getElementById('prev-from').textContent = `${fromName} <lauren@learningcraftai.com>`;
+  document.getElementById('prev-subject').textContent = subject;
+  document.getElementById('prev-body').textContent = body;
+  if (preview) preview.style.display = 'block';
+  preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function sendAnnouncement() {
+  const subject = document.getElementById('ann-subject')?.value.trim();
+  const body = document.getElementById('ann-body')?.value.trim();
+  const fromName = document.getElementById('ann-from-name')?.value.trim() || 'Lauren McDonald';
+  const btn = document.getElementById('ann-send-btn');
+
+  if (!subject) { showToast('error', '⚠', 'Please add a subject line.'); return; }
+  if (!body) { showToast('error', '⚠', 'Please write a message.'); return; }
+
+  const emails = await loadAnnouncementRecipients();
+  if (!emails.length) { showToast('error', '⚠', 'No students found to send to.'); return; }
+
+  const confirmed = confirm(`Send to ${emails.length} student${emails.length !== 1 ? 's' : ''}?\n\nSubject: ${subject}`);
+  if (!confirmed) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  // Call Supabase Edge Function which has the Resend API key
+  try {
+    const { data, error } = await _supabase.functions.invoke('send-announcement', {
+      body: {
+        subject,
+        body,
+        fromName,
+        recipients: emails
+      }
+    });
+
+    if (error) throw error;
+
+    showToast('success', '📣', `Announcement sent to ${emails.length} student${emails.length !== 1 ? 's' : ''}!`);
+    document.getElementById('ann-subject').value = '';
+    document.getElementById('ann-body').value = '';
+    const preview = document.getElementById('ann-preview');
+    if (preview) preview.style.display = 'none';
+  } catch(e) {
+    console.error('Send failed:', e);
+    // Fallback: try direct Resend API (requires key in client — only for trusted admin use)
+    showToast('error', '⚠', 'Send failed. Make sure the send-announcement Edge Function is deployed in Supabase.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Send to All Students <span class="arrow">→</span>';
+  }
+}
 
 // ════════════════════════════════
 // UTILS
