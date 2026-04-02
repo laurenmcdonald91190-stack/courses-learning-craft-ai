@@ -160,7 +160,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .course-progress-label{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.35rem;font-family:'DM Sans',sans-serif;}
 .progress-bar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
 .progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width 1s ease;}
-.course-locked{opacity:0.5;cursor:default;}
+.course-locked{opacity:0.6;cursor:pointer;}
+.course-coming-soon{position:absolute;top:0.6rem;right:0.6rem;font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;background:rgba(155,93,229,0.18);color:#9b5de5;border:1px solid rgba(155,93,229,0.35);padding:0.2rem 0.55rem;border-radius:3px;}
+.lesson-item.lesson-locked{opacity:0.5;cursor:pointer;}
+.lesson-item.lesson-locked:hover{background:rgba(255,255,255,0.02);}
+.locked-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:600;display:none;align-items:center;justify-content:center;padding:2rem;backdrop-filter:blur(4px);}
+.locked-modal-overlay.open{display:flex;}
+.locked-modal{background:var(--bg2);border:1px solid var(--border-v);border-radius:12px;padding:2rem;width:100%;max-width:440px;text-align:center;position:relative;}
+.locked-modal-icon{font-size:2.5rem;margin-bottom:0.75rem;}
+.locked-modal-badge{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--violet);border:1px solid var(--border-v);background:rgba(155,93,229,0.08);padding:0.25rem 0.7rem;border-radius:3px;margin-bottom:1rem;}
+.locked-modal h3{font-size:1.15rem;font-weight:800;margin-bottom:0.6rem;letter-spacing:-0.01em;}
+.locked-modal p{font-size:0.88rem;color:var(--text-muted);line-height:1.65;margin-bottom:1.25rem;}
 .course-locked:hover{transform:none;border-color:var(--border-w);box-shadow:none;}
 
 /* Achievement badges */
@@ -1111,6 +1121,17 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<!-- ── LOCKED CONTENT MODAL ── -->
+<div class="locked-modal-overlay" id="locked-modal" onclick="closeLocked()">
+  <div class="locked-modal" onclick="event.stopPropagation()">
+    <div class="locked-modal-icon">🔒</div>
+    <div class="locked-modal-badge">⏳ In Progress</div>
+    <h3 id="locked-modal-title">This lesson is coming soon</h3>
+    <p id="locked-modal-body">Lauren is actively building this content. You'll be notified as soon as it's available — check back soon or continue with what's unlocked.</p>
+    <button class="btn btn-primary btn-full" onclick="closeLocked()">Got it</button>
+  </div>
+</div>
+
 <!-- ── TOAST ── -->
 <div class="toast" id="toast"><span class="toast-icon" id="toast-icon">✓</span><span id="toast-msg">Done.</span></div>
 
@@ -1190,6 +1211,7 @@ let courses = [
         videoUrl: '', content: '', keyPoints: []
       },
       {
+        locked: true,
         id: 'l2', title: 'How AI Models Learn: RLHF Explained', type: 'video',
         videoUrl: '',
         content: 'Reinforcement Learning from Human Feedback (RLHF) is the process that turns a raw language model into a helpful, safe assistant. It works in three stages: supervised fine-tuning on human-written examples, training a reward model on human preference data, and using reinforcement learning to optimize model behavior. As a contributor, you are the human in RLHF. Your ratings and comparisons are the signal the model uses to learn what humans actually want.',
@@ -1202,6 +1224,7 @@ let courses = [
         ]
       },
       {
+        locked: true,
         id: 'l3', title: 'The AI Training Pipeline: Who Does What', type: 'video',
         videoUrl: '',
         content: 'AI training is not a solo operation. It involves a full pipeline of roles — from AI companies building the models, to data platforms managing the workforce, to contributors doing the evaluation work. Understanding where you sit in this pipeline helps you understand why the work matters and what is expected of you. This lesson maps the full ecosystem so you can see your role clearly.',
@@ -1214,6 +1237,7 @@ let courses = [
         ]
       },
       {
+        locked: true,
         id: 'l4', title: 'Types of Contributor Tasks', type: 'video',
         videoUrl: '',
         content: 'Not all contributor tasks are the same. Across platforms you will encounter several distinct task types, each with its own structure and purpose. Understanding the difference before you start is critical — each task type requires a different mental approach. This lesson covers the four most common task types you will see on real platforms: single response rating, comparative preference, response writing, and error classification.',
@@ -1226,6 +1250,7 @@ let courses = [
         ]
       },
       {
+        locked: true,
         id: 'l5', title: 'What Platforms Expect: Quality, Consistency, and Calibration', type: 'video',
         videoUrl: '',
         content: 'Every major tasking platform measures three things: quality, consistency, and calibration. Quality means your ratings are accurate. Consistency means you apply the same standards every time, not just when you feel like it. Calibration means your judgment aligns with the agreed standard — not your personal opinion. Contributors who score well on all three get more tasks, higher rates, and advance to reviewer roles. This lesson shows you what these metrics look like in practice.',
@@ -1238,6 +1263,7 @@ let courses = [
         ]
       },
       {
+        locked: true,
         id: 'l6', title: 'Knowledge Check', type: 'quiz',
         videoUrl: '', content: '', keyPoints: []
       }
@@ -1317,6 +1343,7 @@ let courses = [
     emoji: '📋',
     thumb: 't2',
     status: 'live',
+    locked: true,
     lessons: [
       {
         id: 'l1', title: 'What Makes a Response Good? The Four Dimensions', type: 'video',
@@ -1484,6 +1511,7 @@ let courses = [
     emoji: '🎯',
     thumb: 't3',
     status: 'live',
+    locked: true,
     lessons: [
       {
         id: 'l1', title: 'Task Type 1: Single Response Rating', type: 'video',
@@ -1973,6 +2001,15 @@ function shouldShowWelcome() {
   if (appState.isDemo || appState.isAdmin) return false;
   return !hasSeenWelcome() && !hasStartedCourse1();
 }
+function showLockedModal(title, body) {
+  document.getElementById('locked-modal-title').textContent = title || 'This content is coming soon';
+  document.getElementById('locked-modal-body').textContent = body || "Lauren is actively building this content. You'll be notified as soon as it's available.";
+  document.getElementById('locked-modal').classList.add('open');
+}
+function closeLocked() {
+  document.getElementById('locked-modal').classList.remove('open');
+}
+
 function showWelcomeVideo() {
   // Reset to thumbnail so iframe isn't preloaded (prevents bg audio)
   const slot = document.getElementById('welcome-iframe-slot');
@@ -2161,22 +2198,32 @@ function renderCourseCards(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
   const visibleCourses = courses.filter(c => appState.isDemo ? c.isDemo : !c.isDemo);
-  container.innerHTML = visibleCourses.map((c,i) => `
-    <div class="course-card" onclick="handleCourseClick('${c.id}')">
-      <div class="course-thumb ${c.thumb}">${c.emoji}</div>
-      <div class="course-body">
-        <div class="course-level-tag">${c.level}</div>
-        <h4>${c.title}</h4>
-        <div class="course-progress-wrap">
-          <div class="course-progress-label">
-            <span>${getCourseProgress(c.id).done} / ${getCourseProgress(c.id).total} lessons</span>
-            <span>${getCourseProgress(c.id).pct}%</span>
-          </div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${getCourseProgress(c.id).pct}%"></div></div>
-        </div>
+  const isAdmin = appState.isAdmin || appState.isImpersonating;
+  container.innerHTML = visibleCourses.map((c,i) => {
+    const isLocked = c.locked && !isAdmin;
+    const prog = getCourseProgress(c.id);
+    return `
+    <div class="course-card ${isLocked ? 'course-locked' : ''}" onclick="handleCourseClick('${c.id}')">
+      <div class="course-thumb ${c.thumb}" style="position:relative;">
+        ${c.emoji}
+        ${isLocked ? `<div class="course-thumb-lock">🔒</div><div class="course-coming-soon">In Progress</div>` : ''}
       </div>
-    </div>
-  `).join('');
+      <div class="course-body">
+        <div class="course-level-tag">${isLocked ? '🔒 Coming Soon' : c.level}</div>
+        <h4>${c.title}</h4>
+        ${isLocked
+          ? `<div style="font-size:0.8rem;color:var(--text-dim);margin-top:0.5rem;line-height:1.5;">Being built now — you'll be notified when it's ready.</div>`
+          : `<div class="course-progress-wrap">
+              <div class="course-progress-label">
+                <span>${prog.done} / ${prog.total} lessons</span>
+                <span>${prog.pct}%</span>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${prog.pct}%"></div></div>
+            </div>`
+        }
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function renderMyCourses() {
@@ -2280,15 +2327,18 @@ function renderLessonList() {
   const u = appState.user;
   const container = document.getElementById('lesson-list');
   let html = '';
+  const isAdminView = appState.isAdmin || appState.isImpersonating;
   course.lessons.forEach((l,i) => {
     const key = course.id+'-'+l.id;
     const done = u.lessonsCompleted.includes(key);
     const isActive = i === appState.currentLessonIdx;
-    html += `<div class="lesson-item ${isActive?'active':''} ${done?'completed':''}" onclick="loadLesson(${i})" id="li-${i}">
-      <div class="lesson-num">${done?'✓':i+1}</div>
+    const isLocked = l.locked && !isAdminView;
+    const typeLabel = l.type==='quiz'?'Knowledge Check':l.type==='practice'?'Practice Tasks':l.type==='interactive'?'Quick Check':'Video Lesson';
+    html += `<div class="lesson-item ${isActive?'active':''} ${done?'completed':''} ${isLocked?'lesson-locked':''}" onclick="${isLocked ? `showLockedLesson(${i})` : `loadLesson(${i})`}" id="li-${i}">
+      <div class="lesson-num">${isLocked ? '🔒' : done ? '✓' : i+1}</div>
       <div class="lesson-info">
         <div class="lesson-title-sm">${l.title}</div>
-        <div class="lesson-type-tag">${l.type==='quiz'?'Knowledge Check':l.type==='practice'?'Practice Tasks':'Video Lesson'}</div>
+        <div class="lesson-type-tag">${isLocked ? 'Coming Soon' : typeLabel}</div>
       </div>
     </div>`;
   });
@@ -2303,6 +2353,13 @@ function updatePlayerProgress() {
   const done = course.lessons.filter(l=>u.lessonsCompleted.includes(course.id+'-'+l.id)).length;
   document.getElementById('player-progress-label').textContent = `${done} of ${total} lessons`;
   document.getElementById('player-progress-fill').style.width = (done/total*100)+'%';
+}
+
+function showLockedLesson(idx) {
+  const course = appState.currentCourse;
+  const lesson = course ? course.lessons[idx] : null;
+  const title = lesson ? lesson.title + ' — Coming Soon' : 'Coming Soon';
+  showLockedModal(title, "This lesson is being built and will be available soon. You'll be notified when it's ready.");
 }
 
 function loadLesson(idx) {
@@ -3959,11 +4016,16 @@ function isPilotUnlocked() {
 }
 
 function handleCourseClick(courseId) {
-  if (isPilotUnlocked()) {
-    openCourse(courseId);
-  } else {
-    checkPilotAccess();
+  if (!isPilotUnlocked()) { checkPilotAccess(); return; }
+  const course = courses.find(c => c.id === courseId);
+  if (course && course.locked && !appState.isAdmin && !appState.isImpersonating) {
+    showLockedModal(
+      `${course.title} — Coming Soon`,
+      "This course is actively being built. You'll receive a notification as soon as it's available. In the meantime, keep going with Course 1."
+    );
+    return;
   }
+  openCourse(courseId);
 }
 
 function checkPilotAccess() {
