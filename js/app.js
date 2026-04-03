@@ -787,7 +787,6 @@ function animateConceptMap() {
     { el: 'cm-eq', delay: 800 },
     { el: 'cm-n3', delay: 1000 },
     { el: 'cm-insight', delay: 1400 },
-    { el: 'cm-cta', delay: 1500 },
   ];
   seq.forEach(({ el, delay }) => {
     setTimeout(() => {
