@@ -816,17 +816,7 @@ function goToInteractive() {
     }
     renderLessonList();
     updateXPBar();
-    const interactiveLesson = course.lessons[interactiveIdx];
-    const isAdminView = appState.isAdmin || appState.isImpersonating;
-    if (interactiveLesson && interactiveLesson.locked && !isAdminView) {
-      showLockedModal(
-        interactiveLesson.title + ' — Coming Soon',
-        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!",
-        () => loadLesson(interactiveIdx)
-      );
-    } else {
-      loadLesson(interactiveIdx);
-    }
+    loadLesson(interactiveIdx);
   }
 }
 
