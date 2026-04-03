@@ -2050,12 +2050,27 @@ function updateBaselineNavLabel() {
 
 function renderDashboardOrBaseline() {
   const a = blState.assessment;
-  const dashEl = document.getElementById('page-dashboard');
-  if (!dashEl) return;
+  const notice = document.getElementById('baseline-notice');
+  if (!notice) return;
   if (!a || a.status !== 'completed') {
-    renderBaselineDashboard();
+    const done = a ? (a.tasks_completed_count || 0) : 0;
+    const total = 8;
+    const pct = Math.round((done / total) * 100);
+    notice.innerHTML = `
+      <div style="background:linear-gradient(135deg,rgba(155,93,229,0.08),rgba(0,229,200,0.05));border:1px solid var(--border-v);border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--violet);margin-bottom:0.35rem;">📋 Action Required</div>
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.25rem;">Complete your baseline assessment to unlock courses</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);">${done === 0 ? 'Takes about 10–15 minutes. No right or wrong answers — just your best judgment.' : `${done} of ${total} tasks done (${pct}%)`}</div>
+        </div>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-shrink:0;">
+          ${appState.isTestUser ? `<button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassBaseline()">⚡ Skip to Next Step →</button>` : ''}
+          <button class="btn btn-primary btn-sm" onclick="enterBaselineAssessment()">${done === 0 ? 'Begin Assessment →' : 'Continue Assessment →'}</button>
+        </div>
+      </div>`;
+  } else {
+    notice.innerHTML = '';
   }
-  // If completed — normal dashboard shows
 }
 
 function renderBaselineDashboard() {
@@ -2531,6 +2546,7 @@ function exitBaselineToHome() {
   showView('view-app');
   renderApp();
   navTo('dashboard');
+  renderDashboardOrBaseline();
 }
 
 // ── Admin baseline panel ──────────────────────────────────────────────
