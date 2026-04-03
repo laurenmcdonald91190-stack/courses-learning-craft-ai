@@ -277,7 +277,7 @@ function demoBypassLock() {
 function demoBypassPilot() {
   localStorage.setItem('lcai_pilot_unlocked', '1');
   document.getElementById('pilot-gate-modal').classList.remove('open');
-  showToast('success', '⚡', 'Demo: Pilot gate bypassed.');
+  showToast('success', '⚡', 'Demo: step skipped.');
 }
 function demoBypassBaseline() {
   blState.assessment = { status: 'completed', tasks_completed_count: 8 };
@@ -787,7 +787,7 @@ function animateConceptMap() {
     { el: 'cm-eq', delay: 800 },
     { el: 'cm-n3', delay: 1000 },
     { el: 'cm-insight', delay: 1400 },
-    { el: 'cm-cta', delay: 1900 },
+    { el: 'cm-cta', delay: 1500 },
   ];
   seq.forEach(({ el, delay }) => {
     setTimeout(() => {
@@ -816,7 +816,17 @@ function goToInteractive() {
     }
     renderLessonList();
     updateXPBar();
-    loadLesson(interactiveIdx);
+    const interactiveLesson = course.lessons[interactiveIdx];
+    const isAdminView = appState.isAdmin || appState.isImpersonating;
+    if (interactiveLesson && interactiveLesson.locked && !isAdminView) {
+      showLockedModal(
+        interactiveLesson.title + ' — Coming Soon',
+        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!",
+        () => loadLesson(interactiveIdx)
+      );
+    } else {
+      loadLesson(interactiveIdx);
+    }
   }
 }
 
@@ -2065,7 +2075,7 @@ function renderBaselineDashboard() {
       <!-- Hero -->
       <div class="bl-hero fade-in">
         <div class="bl-hero-tag">📋 Baseline Assessment Required</div>
-        ${appState.isTestUser ? `<div style="text-align:right;margin-bottom:0.75rem;"><button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassBaseline()">⚡ Demo: Skip Assessment →</button></div>` : ''}
+        ${appState.isTestUser ? `<div style="text-align:right;margin-bottom:0.75rem;"><button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassBaseline()">⚡ Skip to Next Step →</button></div>` : ''}
         <h2>Welcome, <span style="color:var(--cyan)">${appState.user.name.split(' ')[0]}</span> — let's establish your starting point.</h2>
         <p>Before you begin, you'll complete a short set of baseline tasks. These help establish your starting point so we can measure your progress throughout the program.<br><br>
         This isn't about getting everything right. Just approach each task with your best judgment based on what you know today.<br><br>
@@ -2464,6 +2474,8 @@ function renderBaselineComplete() {
 }
 
 async function viewBaselineReview() {
+  showView('view-baseline-tasking');
+  document.getElementById('view-baseline-tasking').style.display = 'block';
   // Mark review viewed
   if (blState.assessment?.id) {
     await _supabase.from('baseline_assessments').update({ review_viewed: true }).eq('id', blState.assessment.id);
