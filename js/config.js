@@ -27,6 +27,11 @@ const ADMIN_EMAILS = [
 const ADMIN_EMAIL = ADMIN_EMAILS[0]; // kept for legacy refs
 const ADMIN_PASS  = 'lcai2026@dmin';
 const PILOT_CODE  = 'LCPILOT2026';
+
+// Test accounts: full student UI but all locks + baseline bypassed
+const TEST_EMAILS = [
+  'lashley.mcdonald90@gmail.com',
+];
 const WAITLIST_FORM = 'https://formspree.io/f/mnjoagzj';
 const DEMO_EMAIL  = 'demo@learningcraftai.com';
 const DEMO_PASS   = 'lcaidemo2026';
@@ -36,6 +41,7 @@ let appState = {
   isAdmin: false,
   isDemo: false,
   isImpersonating: false,
+  isTestUser: false,
   prevAdminState: null,
   currentCourse: null,
   currentLessonIdx: 0,

@@ -303,6 +303,7 @@ function updateWelcomeCallout() {
 async function loginUser(user) {
   appState.user = user;
   appState.isAdmin = false;
+  appState.isTestUser = TEST_EMAILS.includes((user.email || '').toLowerCase());
   await loadLeaderboard();
   showView('view-app');
   renderApp();
@@ -316,6 +317,7 @@ function handleLogout() {
   appState.user = null;
   appState.isAdmin = false;
   appState.isDemo = false;
+  appState.isTestUser = false;
   leaderboard = [];
   try {
     localStorage.removeItem('lcai_session_type');
@@ -585,7 +587,7 @@ function renderLessonList() {
   const u = appState.user;
   const container = document.getElementById('lesson-list');
   let html = '';
-  const isAdminView = appState.isAdmin || appState.isImpersonating;
+  const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
   course.lessons.forEach((l,i) => {
     const key = course.id+'-'+l.id;
     const done = u.lessonsCompleted.includes(key);
@@ -885,7 +887,7 @@ async function completeInteractive(idx) {
   const nextIdx = idx + 1;
   if (nextIdx < course.lessons.length) {
     const nextL = course.lessons[nextIdx];
-    const isAdminView = appState.isAdmin || appState.isImpersonating;
+    const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
@@ -1240,7 +1242,7 @@ function completeLesson(idx) {
   const nextIdx = idx + 1;
   if (nextIdx < course.lessons.length) {
     const nextL = course.lessons[nextIdx];
-    const isAdminView = appState.isAdmin || appState.isImpersonating;
+    const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
@@ -1950,7 +1952,7 @@ let blState = {
 
 // ── Entry point ──────────────────────────────────────────────────────
 async function initBaseline() {
-  if (!appState.user || !appState.user.supabaseId || appState.isDemo || appState.isAdmin) return;
+  if (!appState.user || !appState.user.supabaseId || appState.isDemo || appState.isAdmin || appState.isTestUser) return;
   try {
     const { data: existing } = await _supabase
       .from('baseline_assessments')
@@ -3181,14 +3183,14 @@ async function submitTask(taskId) {
 // PILOT GATE
 // ════════════════════════════════
 function isPilotUnlocked() {
-  return appState.isAdmin || appState.isDemo || localStorage.getItem('lcai_pilot_unlocked') === '1';
+  return appState.isAdmin || appState.isDemo || appState.isTestUser || localStorage.getItem('lcai_pilot_unlocked') === '1';
 }
 
 function handleCourseClick(courseId) {
   if (!isPilotUnlocked()) { checkPilotAccess(); return; }
   // Block if baseline not completed
   const a = blState.assessment;
-  if (!appState.isAdmin && !appState.isImpersonating && !appState.isDemo) {
+  if (!appState.isAdmin && !appState.isImpersonating && !appState.isDemo && !appState.isTestUser) {
     if (!a || a.status !== 'completed') {
       showLockedModal(
         'Complete Your Baseline First',
@@ -3198,7 +3200,7 @@ function handleCourseClick(courseId) {
     }
   }
   const course = courses.find(c => c.id === courseId);
-  if (course && course.locked && !appState.isAdmin && !appState.isImpersonating) {
+  if (course && course.locked && !appState.isAdmin && !appState.isImpersonating && !appState.isTestUser) {
     showLockedModal(
       `${course.title} — Coming Soon`,
       "This course is actively being built. You'll receive a notification as soon as it's available. In the meantime, keep going with Course 1."
