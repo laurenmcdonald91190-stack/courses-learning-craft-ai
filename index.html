@@ -188,6 +188,10 @@
         <div id="demo-admin-link" style="display:none;margin-top:0.75rem;">
           <button class="btn btn-sm btn-full" style="background:rgba(155,93,229,0.15);color:#9b5de5;border:1px solid rgba(155,93,229,0.35);" onclick="handleDemoAdminView()">⚙ View Course Builder</button>
         </div>
+        <!-- Test account: reset demo button -->
+        <div id="demo-reset-btn" style="display:none;margin-top:0.75rem;">
+          <button class="btn btn-sm btn-full" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);" onclick="resetDemo()">🔄 Reset Demo</button>
+        </div>
       </div>
     </aside>
 
@@ -643,6 +647,9 @@
         <button class="btn btn-primary" onclick="submitPilotCode()" style="white-space:nowrap;">Unlock →</button>
       </div>
       <div id="pilot-code-error" style="font-size:0.8rem;color:#ff6b6b;margin-top:0.4rem;display:none;">Invalid code. Check with Lauren for your pilot access code.</div>
+      <div id="demo-pilot-bypass" style="display:none;margin-top:0.75rem;text-align:center;">
+        <button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassPilot()">⚡ Demo: Skip →</button>
+      </div>
     </div>
 
     <div style="border-top:1px solid var(--border-w);padding-top:1.25rem;">
@@ -677,6 +684,9 @@
     <h3 id="locked-modal-title">This lesson is coming soon</h3>
     <p id="locked-modal-body">Lauren is actively building this content. You'll be notified as soon as it's available — check back soon or continue with what's unlocked.</p>
     <button class="btn btn-primary btn-full" onclick="closeLocked()">Got it</button>
+    <div id="demo-lock-bypass" style="display:none;margin-top:0.75rem;">
+      <button class="btn btn-sm btn-full" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassLock()">⚡ Demo: Unlock →</button>
+    </div>
   </div>
 </div>
 

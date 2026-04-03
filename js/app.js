@@ -253,13 +253,66 @@ function shouldShowWelcome() {
   if (appState.isDemo || appState.isAdmin) return false;
   return !hasSeenWelcome() && !hasStartedCourse1();
 }
-function showLockedModal(title, body) {
+let _demoBypassFn = null;
+
+function showLockedModal(title, body, bypassFn) {
   document.getElementById('locked-modal-title').textContent = title || 'This content is coming soon';
   document.getElementById('locked-modal-body').textContent = body || "Lauren is actively building this content. You'll be notified as soon as it's available.";
   document.getElementById('locked-modal').classList.add('open');
+  _demoBypassFn = bypassFn || null;
+  const bypassBtn = document.getElementById('demo-lock-bypass');
+  if (bypassBtn) bypassBtn.style.display = (appState.isTestUser && bypassFn) ? 'block' : 'none';
 }
 function closeLocked() {
   document.getElementById('locked-modal').classList.remove('open');
+  _demoBypassFn = null;
+  const bypassBtn = document.getElementById('demo-lock-bypass');
+  if (bypassBtn) bypassBtn.style.display = 'none';
+}
+function demoBypassLock() {
+  const fn = _demoBypassFn;
+  closeLocked();
+  if (fn) fn();
+}
+function demoBypassPilot() {
+  localStorage.setItem('lcai_pilot_unlocked', '1');
+  document.getElementById('pilot-gate-modal').classList.remove('open');
+  showToast('success', '⚡', 'Demo: Pilot gate bypassed.');
+}
+function demoBypassBaseline() {
+  blState.assessment = { status: 'completed', tasks_completed_count: 8 };
+  renderDashboardOrBaseline();
+}
+async function resetDemo() {
+  if (!appState.isTestUser || !appState.user) return;
+  const uid = appState.user.supabaseId;
+  if (!uid) return;
+  showToast('success', '🔄', 'Resetting demo...');
+  try {
+    await Promise.all([
+      _supabase.from('baseline_assessments').delete().eq('user_id', uid),
+      _supabase.from('course_progress').delete().eq('user_id', uid),
+      _supabase.from('user_xp').update({ xp: 0, level: 1, streak: 1, last_active: new Date().toISOString() }).eq('user_id', uid),
+    ]);
+  } catch(e) { console.warn('resetDemo Supabase error', e); }
+  localStorage.removeItem('lcai_pilot_unlocked');
+  localStorage.removeItem('lcai_welcome_seen');
+  appState.user.xp = 0;
+  appState.user.level = 1;
+  appState.user.streak = 1;
+  appState.user.lessonsCompleted = [];
+  appState.user.badges = [];
+  appState.user.correctAnswers = 0;
+  appState.currentCourse = null;
+  appState.currentLessonIdx = 0;
+  blState.assessment = null;
+  blState.tasks = [];
+  blState.attempts = {};
+  blState.currentTaskIdx = 0;
+  showView('view-app');
+  renderApp();
+  navTo('dashboard');
+  showToast('success', '✓', 'Demo reset — ready to go again!');
 }
 
 function showWelcomeVideo() {
@@ -413,6 +466,10 @@ function renderApp() {
   if (demoAdminLink) demoAdminLink.style.display = appState.isDemo ? 'block' : 'none';
   if (impersonateBanner) impersonateBanner.style.display = appState.isImpersonating ? 'flex' : 'none';
   if (appState.isImpersonating) document.getElementById('impersonate-name').textContent = appState.user.name;
+  const demoResetBtn = document.getElementById('demo-reset-btn');
+  if (demoResetBtn) demoResetBtn.style.display = appState.isTestUser ? 'block' : 'none';
+  const demoPilotBypass = document.getElementById('demo-pilot-bypass');
+  if (demoPilotBypass) demoPilotBypass.style.display = appState.isTestUser ? 'block' : 'none';
   updateXPBar();
   renderDashboard();
   updateWelcomeCallout();
@@ -587,7 +644,7 @@ function renderLessonList() {
   const u = appState.user;
   const container = document.getElementById('lesson-list');
   let html = '';
-  const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
+  const isAdminView = appState.isAdmin || appState.isImpersonating;
   course.lessons.forEach((l,i) => {
     const key = course.id+'-'+l.id;
     const done = u.lessonsCompleted.includes(key);
@@ -619,7 +676,7 @@ function showLockedLesson(idx) {
   const course = appState.currentCourse;
   const lesson = course ? course.lessons[idx] : null;
   const title = lesson ? lesson.title + ' — Coming Soon' : 'Coming Soon';
-  showLockedModal(title, "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!");
+  showLockedModal(title, "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!", () => loadLesson(idx));
 }
 
 function loadLesson(idx) {
@@ -887,11 +944,12 @@ async function completeInteractive(idx) {
   const nextIdx = idx + 1;
   if (nextIdx < course.lessons.length) {
     const nextL = course.lessons[nextIdx];
-    const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
+    const isAdminView = appState.isAdmin || appState.isImpersonating;
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
-        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!"
+        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!",
+        () => loadLesson(nextIdx)
       );
     } else {
       loadLesson(nextIdx);
@@ -1242,7 +1300,7 @@ function completeLesson(idx) {
   const nextIdx = idx + 1;
   if (nextIdx < course.lessons.length) {
     const nextL = course.lessons[nextIdx];
-    const isAdminView = appState.isAdmin || appState.isImpersonating || appState.isTestUser;
+    const isAdminView = appState.isAdmin || appState.isImpersonating;
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
@@ -1269,7 +1327,8 @@ function nextLesson() {
   if (nextLesson && nextLesson.locked && !isAdminView) {
     showLockedModal(
       nextLesson.title + ' — Coming Soon',
-      "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!"
+      "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!",
+      () => loadLesson(nextIdx)
     );
     return;
   }
@@ -1952,7 +2011,7 @@ let blState = {
 
 // ── Entry point ──────────────────────────────────────────────────────
 async function initBaseline() {
-  if (!appState.user || !appState.user.supabaseId || appState.isDemo || appState.isAdmin || appState.isTestUser) return;
+  if (!appState.user || !appState.user.supabaseId || appState.isDemo || appState.isAdmin) return;
   try {
     const { data: existing } = await _supabase
       .from('baseline_assessments')
@@ -2006,6 +2065,7 @@ function renderBaselineDashboard() {
       <!-- Hero -->
       <div class="bl-hero fade-in">
         <div class="bl-hero-tag">📋 Baseline Assessment Required</div>
+        ${appState.isTestUser ? `<div style="text-align:right;margin-bottom:0.75rem;"><button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoBypassBaseline()">⚡ Demo: Skip Assessment →</button></div>` : ''}
         <h2>Welcome, <span style="color:var(--cyan)">${appState.user.name.split(' ')[0]}</span> — let's establish your starting point.</h2>
         <p>Before you begin, you'll complete a short set of baseline tasks. These help establish your starting point so we can measure your progress throughout the program.<br><br>
         This isn't about getting everything right. Just approach each task with your best judgment based on what you know today.<br><br>
@@ -3183,27 +3243,29 @@ async function submitTask(taskId) {
 // PILOT GATE
 // ════════════════════════════════
 function isPilotUnlocked() {
-  return appState.isAdmin || appState.isDemo || appState.isTestUser || localStorage.getItem('lcai_pilot_unlocked') === '1';
+  return appState.isAdmin || appState.isDemo || localStorage.getItem('lcai_pilot_unlocked') === '1';
 }
 
 function handleCourseClick(courseId) {
   if (!isPilotUnlocked()) { checkPilotAccess(); return; }
   // Block if baseline not completed
   const a = blState.assessment;
-  if (!appState.isAdmin && !appState.isImpersonating && !appState.isDemo && !appState.isTestUser) {
+  if (!appState.isAdmin && !appState.isImpersonating && !appState.isDemo) {
     if (!a || a.status !== 'completed') {
       showLockedModal(
         'Complete Your Baseline First',
-        'Complete your baseline assessment to receive your course unlock code. Once you have the code, you can access the courses.'
+        'Complete your baseline assessment to receive your course unlock code. Once you have the code, you can access the courses.',
+        () => { demoBypassBaseline(); openCourse(courseId); }
       );
       return;
     }
   }
   const course = courses.find(c => c.id === courseId);
-  if (course && course.locked && !appState.isAdmin && !appState.isImpersonating && !appState.isTestUser) {
+  if (course && course.locked && !appState.isAdmin && !appState.isImpersonating) {
     showLockedModal(
       `${course.title} — Coming Soon`,
-      "This course is actively being built. You'll receive a notification as soon as it's available. In the meantime, keep going with Course 1."
+      "This course is actively being built. You'll receive a notification as soon as it's available. In the meantime, keep going with Course 1.",
+      () => openCourse(courseId)
     );
     return;
   }
