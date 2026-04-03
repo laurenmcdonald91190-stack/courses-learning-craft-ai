@@ -283,6 +283,15 @@ function demoBypassBaseline() {
   blState.assessment = { status: 'completed', tasks_completed_count: 8 };
   renderDashboardOrBaseline();
 }
+function demoSkipBaselineTask() {
+  blState.currentTaskIdx++;
+  if (blState.currentTaskIdx >= blState.tasks.length) {
+    blState.assessment = { status: 'completed', tasks_completed_count: blState.tasks.length };
+    renderBaselineComplete();
+  } else {
+    renderBaselineTask();
+  }
+}
 async function resetDemo() {
   if (!appState.isTestUser || !appState.user) return;
   const uid = appState.user.supabaseId;
@@ -312,6 +321,7 @@ async function resetDemo() {
   showView('view-app');
   renderApp();
   navTo('dashboard');
+  renderDashboardOrBaseline();
   showToast('success', '✓', 'Demo reset — ready to go again!');
 }
 
@@ -2270,6 +2280,7 @@ function renderBaselineTask() {
       </div>
       <div style="display:flex;gap:0.75rem;align-items:center;">
         <span class="task-autosave" id="bl-save-status"></span>
+        ${appState.isTestUser ? `<button class="btn btn-sm" style="background:rgba(245,200,66,0.1);color:var(--gold);border:1px solid rgba(245,200,66,0.3);font-size:0.75rem;" onclick="demoSkipBaselineTask()">⚡ Skip to Next Step →</button>` : ''}
         ${isSubmitted
           ? (idx < total - 1
               ? `<button class="btn btn-primary btn-sm" onclick="blNavTo(${idx + 1})">Next Task →</button>`
