@@ -24,6 +24,7 @@ let courses = [
         ]
       },
       {
+        locked: true,
         id: 'l1i', title: 'Quick Check: Prediction vs. Judgment', type: 'interactive',
         videoUrl: '', content: '', keyPoints: []
       },

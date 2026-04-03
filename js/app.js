@@ -617,7 +617,7 @@ function showLockedLesson(idx) {
   const course = appState.currentCourse;
   const lesson = course ? course.lessons[idx] : null;
   const title = lesson ? lesson.title + ' — Coming Soon' : 'Coming Soon';
-  showLockedModal(title, "This lesson is being built and will be available soon. You'll be notified when it's ready.");
+  showLockedModal(title, "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!");
 }
 
 function loadLesson(idx) {
@@ -889,7 +889,7 @@ async function completeInteractive(idx) {
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
-        "This lesson is being built and will be available soon. You'll be notified when it's ready."
+        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!"
       );
     } else {
       loadLesson(nextIdx);
@@ -1244,7 +1244,7 @@ function completeLesson(idx) {
     if (nextL && nextL.locked && !isAdminView) {
       showLockedModal(
         nextL.title + ' — Coming Soon',
-        "This lesson is being built and will be available soon. You'll be notified when it's ready."
+        "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!"
       );
     } else {
       loadLesson(nextIdx);
@@ -1267,7 +1267,7 @@ function nextLesson() {
   if (nextLesson && nextLesson.locked && !isAdminView) {
     showLockedModal(
       nextLesson.title + ' — Coming Soon',
-      "This lesson is being built and will be available soon. You'll be notified when it's ready."
+      "This lesson is currently in progress. You'll receive an email as soon as it goes live — check back soon!"
     );
     return;
   }
